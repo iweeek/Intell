@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">智慧工地</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="welcome">Welcome!</string>
+    <string name="video">视频</string>
+    <string name="home">首页</string>
+    <string name="user">我的</string>
+    <string name="workshop">工作台</string>
+    <string name="video_image">Video image</string>
+    <string name="video_detail">10,000</string>
+
+    <string name="string_stop_play">"停止"</string>
+    <string name="string_pause_play">"暂停"</string>
+    <string name="string_start_play">"播放"</string>
+    <string name="string_not_found_recordfile">"未找到录像文件"</string>
+
+</resources>
