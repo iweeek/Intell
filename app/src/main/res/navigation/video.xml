@@ -24,7 +24,7 @@
 
     <fragment
             android:id="@+id/videoScreen"
-            android:name="com.example.intell.videoscreen.VideoRecyclerViewFragment"
+            android:name="com.example.intell.fragment.VideoFragment"
             android:label="@string/video"
             tools:layout="@layout/fragment_video">
 
@@ -34,7 +34,7 @@
     </fragment>
     <activity
         android:id="@+id/playActivity"
-        android:name="com.example.intell.PlayActivity"
+        android:name="com.example.intell.ui.PlayActivity"
         android:label="PlayActivity" />
 
 </navigation>

@@ -4,13 +4,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".videoscreen.VideoRecyclerViewFragment">
+    tools:context=".fragment.VideoFragment">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/video_recycler_view"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:context="com.example.android.navigationadvancedsample.listscreen.Leaderboard"
-        tools:listitem="@layout/video_row_item"/>
+        android:background="@color/videoGridBackgroundColor"
+        android:paddingStart="@dimen/video_grid_spacing"
+        android:paddingEnd="@dimen/video_grid_spacing"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/video_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            tools:context="com.example.android.navigationadvancedsample.listscreen.Leaderboard"
+            tools:listitem="@layout/video_row_item"/>
+
+    </androidx.core.widget.NestedScrollView>
 </FrameLayout>

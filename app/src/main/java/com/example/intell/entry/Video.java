@@ -18,10 +18,11 @@ public class Video implements Serializable {
     private String accessToken;
     private String url;
     private String detail;
+    private Integer image;
 
     public Video() {}
 
-    public Video(int vid, String serialNumber, String name, String appKey, String accessToken, String url, String detail) {
+    public Video(int vid, String serialNumber, String name, String appKey, String accessToken, String url, String detail, Integer image) {
         this.vid = vid;
         this.serialNumber = serialNumber;
         this.name = name;
@@ -29,6 +30,7 @@ public class Video implements Serializable {
         this.accessToken = accessToken;
         this.url = url;
         this.detail = detail;
+        this.image = image;
     }
 
     public int getVid() {
@@ -85,5 +87,13 @@ public class Video implements Serializable {
 
     public void setDetail(String detail) {
         this.detail = detail;
+    }
+
+    public Integer getImage() {
+        return image;
+    }
+
+    public void setImage(Integer image) {
+        this.image = image;
     }
 }

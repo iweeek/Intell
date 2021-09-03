@@ -1,17 +1,30 @@
 <resources>
     <string name="app_name">智慧工地</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="welcome">Welcome!</string>
+    <string name="welcome">欢迎来到工作台!</string>
     <string name="video">视频</string>
     <string name="home">首页</string>
     <string name="user">我的</string>
+    <string name="name">姓名</string>
     <string name="workshop">工作台</string>
     <string name="video_image">Video image</string>
+    <string name="video_title">Title</string>
     <string name="video_detail">10,000</string>
 
     <string name="string_stop_play">"停止"</string>
     <string name="string_pause_play">"暂停"</string>
     <string name="string_start_play">"播放"</string>
     <string name="string_not_found_recordfile">"未找到录像文件"</string>
+
+    <string name="environment_monitor">环境监测</string>
+    <string name="title_activity_environment">EnvironmentActivity</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
 
 </resources>

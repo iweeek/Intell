@@ -1,19 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/mainFragment">
-
-
+    app:startDestination="@id/home">
 
     <include app:graph="@navigation/home"/>
     <include app:graph="@navigation/video"/>
     <include app:graph="@navigation/user"/>
-
-    <fragment
-        android:id="@+id/mainFragment"
-        android:name="com.example.intell.homescreen.HomeFragment"
-        android:label="fragment_main"
-        tools:layout="@layout/fragment_home" />
 </navigation>

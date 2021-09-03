@@ -7,4 +7,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "Intell"
-include ':app'
+include ':app', ':circleprogresslibrary'

@@ -24,8 +24,22 @@
 
     <fragment
         android:id="@+id/homeScreen"
-        android:name="com.example.intell.homescreen.HomeFragment"
+        android:name="com.example.intell.fragment.HomeFragment"
         android:label="@string/home"
         tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeScreen_to_environmentFragment"
+            app:destination="@id/environmentFragment" />
+        <action
+            android:id="@+id/action_homeScreen_to_environmentActivity"
+            app:destination="@id/environmentActivity" />
     </fragment>
+    <fragment
+        android:id="@+id/environmentFragment"
+        android:name="com.example.intell.fragment.EnvironmentFragment"
+        android:label="EnvironmentFragment" />
+    <activity
+        android:id="@+id/environmentActivity"
+        android:name="com.example.intell.ui.EnvironmentActivity"
+        android:label="EnvironmentActivity" />
 </navigation>
