@@ -2,7 +2,7 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="15dp"
@@ -23,16 +23,22 @@
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="20sp"/>
 
-        <io.netopen.hotbitmapgg.view.NewCreditSesameView
-            android:id="@+id/AQIView"
+        <com.ethanco.circleprogresslibrary.TextOneCircleProgress
+            android:id="@+id/environmentTextCircleProgress"
+            android:layout_width="296dp"
+            android:layout_height="216dp"
             android:layout_gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:gravity="center_horizontal"
+            custom:bottomHeadSize="20sp"
+            custom:headColor="@color/color2"
+            custom:headSize="30sp"
+            custom:subHeadColor="@color/color4"
+            custom:subHeadSize="14sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:layout_marginBottom="5dp">
 
             <RelativeLayout

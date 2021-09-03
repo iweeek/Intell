@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.ethanco.circleprogresslibrary.TextOneCircleProgress;
 import com.example.intell.R;
 import com.example.intell.entry.EnvironmentData;
 import com.example.intell.network.EnvironmentService;
@@ -46,6 +47,10 @@ public class EnvironmentActivity extends AppCompatActivity {
 
     private SwipeRefreshLayout swipeRefreshLayout;
 
+    private TextOneCircleProgress mEnvironmentCircleProgress;
+    private TextOneCircleProgress mWaterCircleProgress;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +74,9 @@ public class EnvironmentActivity extends AppCompatActivity {
         tvEC = findViewById(R.id.ecText);
 
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
+        mEnvironmentCircleProgress = (TextOneCircleProgress) findViewById(R.id.environmentTextCircleProgress);
+        mWaterCircleProgress = (TextOneCircleProgress) findViewById(R.id.waterTextCircleProgress);
+
         getEnvironmentByNetwork();
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -93,6 +101,20 @@ public class EnvironmentActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<EnvironmentData>> call, Response<List<EnvironmentData>> response) {
                 List<EnvironmentData> data = response.body();
+
+                double AQI = (Double.parseDouble(data.get(0).getPM25()) + Double.parseDouble(data.get(0).getPM10())) / 2;
+
+                mEnvironmentCircleProgress.setSubProgress((int) Math.round(AQI * 0.2));
+                mEnvironmentCircleProgress.setHead(String.valueOf(Math.round(AQI)));
+                mEnvironmentCircleProgress.setSubHead("");
+                mEnvironmentCircleProgress.setBottomHead("空气质量参数");
+
+                AQI = (Double.parseDouble(data.get(0).getPM25()) + Double.parseDouble(data.get(0).getPM10())) / 2;
+
+                mWaterCircleProgress.setSubProgress((int) Math.round(AQI * 0.2));
+                mWaterCircleProgress.setHead(String.valueOf(Math.round(AQI)));
+                mWaterCircleProgress.setSubHead("");
+                mWaterCircleProgress.setBottomHead("水质质量参数");
 
                 tvTemperature.setText(data.get(0).getAir_T() +" ℃");
                 tvHumidity.setText(data.get(0).getAir_H() + " %");
