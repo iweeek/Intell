@@ -91,7 +91,7 @@ public class WorkshopCardViewAdapter extends RecyclerView.Adapter<WorkshopCardVi
             public void onClick(View view) {
                 TextView tv = view.findViewById(R.id.module_title);
                 if (tv.getText().equals(view.getContext().getResources().getString(R.string.environment_monitor))) {
-                    Toast.makeText(view.getContext(), R.string.environment_monitor, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(view.getContext(), R.string.environment_monitor, Toast.LENGTH_SHORT).show();
 //                    Navigation.findNavController(view).navigate(R.id.action_homeScreen_to_environmentFragment);
                     Navigation.findNavController(view).navigate(R.id.action_homeScreen_to_environmentActivity);
                 }

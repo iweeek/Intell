@@ -39,6 +39,21 @@ public class VideoFragment extends Fragment {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        System.out.println(TAG + ": onPause...");
+        VideoCardViewAdapter.removeAllEZUIPlayer();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        System.out.println(TAG + ": onStop...");
+//        VideoCardViewAdapter.mEZUIPlayer.stopPlay();
+//        VideoCardViewAdapter.mEZUIPlayer.releasePlayer();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -116,6 +131,7 @@ public class VideoFragment extends Fragment {
             video.setAppKey("df21b714ee1a4941984137eae76e1245");
             video.setAccessToken(getTokenBySharedPreferences());
             video.setUrl("ezopen://open.ys7.com/"+ video.getSerialNumber() +"/1.hd.live");
+            video.setSurl("ezopen://open.ys7.com/"+ video.getSerialNumber() +"/1.live");
             mDataset.add(video);
         }
     }

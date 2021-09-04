@@ -109,13 +109,6 @@ public class EnvironmentActivity extends AppCompatActivity {
                 mEnvironmentCircleProgress.setSubHead("");
                 mEnvironmentCircleProgress.setBottomHead("空气质量参数");
 
-                AQI = (Double.parseDouble(data.get(0).getPM25()) + Double.parseDouble(data.get(0).getPM10())) / 2;
-
-                mWaterCircleProgress.setSubProgress((int) Math.round(AQI * 0.2));
-                mWaterCircleProgress.setHead(String.valueOf(Math.round(AQI)));
-                mWaterCircleProgress.setSubHead("");
-                mWaterCircleProgress.setBottomHead("水质质量参数");
-
                 tvTemperature.setText(data.get(0).getAir_T() +" ℃");
                 tvHumidity.setText(data.get(0).getAir_H() + " %");
 
@@ -158,11 +151,22 @@ public class EnvironmentActivity extends AppCompatActivity {
             public void onResponse(Call<List<EnvironmentData>> call, Response<List<EnvironmentData>> response) {
                 List<EnvironmentData> data = response.body();
 
+                double ph = Double.parseDouble(data.get(0).getPH());
+                double turbidity = Double.parseDouble(data.get(0).getTurbidity());
+                double ec = Double.parseDouble(data.get(0).getEC());
+
                 tvTemperatureWater.setText(data.get(0).getTemperature() +" ℃");
                 tvPH.setText(data.get(0).getPH() + " %");
 
                 tvTurbidity.setText(data.get(0).getTurbidity() + " JTU");
                 tvEC.setText(data.get(0).getEC() + " S/m");
+
+                Double WQI = (turbidity + Math.abs(ph - 7) * 100 + ec * 1000) / 30;
+
+                mWaterCircleProgress.setSubProgress((int) Math.round(WQI * 0.2));
+                mWaterCircleProgress.setHead(String.valueOf(Math.round(WQI)));
+                mWaterCircleProgress.setSubHead("");
+                mWaterCircleProgress.setBottomHead("水质质量参数");
             }
 
             @Override

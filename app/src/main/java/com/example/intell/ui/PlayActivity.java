@@ -184,6 +184,7 @@ public class PlayActivity extends Activity implements View.OnClickListener,
 
         //设置授权accesstoken
         EZUIKit.setAccessToken(accesstoken);
+        System.out.println("nijunnihao" + accesstoken);
         //设置播放资源参数
         mEZUIPlayer.setCallBack(this);
         mEZUIPlayer.setUrl(playUrl);
