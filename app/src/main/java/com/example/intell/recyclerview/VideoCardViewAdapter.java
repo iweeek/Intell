@@ -173,10 +173,7 @@ public class VideoCardViewAdapter extends RecyclerView.Adapter<VideoCardViewAdap
             mEZUIPlayer.stopPlay();
             mEZUIPlayer.releasePlayer();
         }
-
     }
-
-
 
     /**
      * Initialize the dataset of the Adapter.

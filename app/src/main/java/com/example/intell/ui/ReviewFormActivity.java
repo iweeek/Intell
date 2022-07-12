@@ -24,7 +24,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class EnvironmentActivity extends AppCompatActivity {
+public class ReviewFormActivity extends AppCompatActivity {
 
     private static final String TAG = "EnvironmentActivity";
 

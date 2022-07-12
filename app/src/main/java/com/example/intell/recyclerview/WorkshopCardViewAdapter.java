@@ -95,6 +95,9 @@ public class WorkshopCardViewAdapter extends RecyclerView.Adapter<WorkshopCardVi
 //                    Navigation.findNavController(view).navigate(R.id.action_homeScreen_to_environmentFragment);
                     Navigation.findNavController(view).navigate(R.id.action_homeScreen_to_environmentActivity);
                 }
+                if (tv.getText().equals(view.getContext().getResources().getString(R.string.review_form))) {
+                    Navigation.findNavController(view).navigate(R.id.action_);
+                }
 
             }
         });

@@ -17,6 +17,7 @@
     <string name="string_not_found_recordfile">"未找到录像文件"</string>
 
     <string name="environment_monitor">环境监测</string>
+    <string name="review_form">技术审查表</string>
     <string name="title_activity_environment">EnvironmentActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

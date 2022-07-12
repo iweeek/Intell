@@ -27,6 +27,7 @@
         android:name="com.example.intell.fragment.HomeFragment"
         android:label="@string/home"
         tools:layout="@layout/fragment_home">
+        <!--  暂时没有用到      -->
         <action
             android:id="@+id/action_homeScreen_to_environmentFragment"
             app:destination="@id/environmentFragment" />
@@ -34,6 +35,7 @@
             android:id="@+id/action_homeScreen_to_environmentActivity"
             app:destination="@id/environmentActivity" />
     </fragment>
+    <!--  暂时没有用到      -->
     <fragment
         android:id="@+id/environmentFragment"
         android:name="com.example.intell.fragment.EnvironmentFragment"
