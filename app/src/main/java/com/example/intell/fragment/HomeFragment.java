@@ -66,8 +66,7 @@ public class HomeFragment extends Fragment {
         name.add("我的账号");
         name.add(getResources().getString(R.string.environment_monitor));
         name.add(getResources().getString(R.string.review_form));
-        name.add("PDF预览");
-        name.add("PDF预览JS");
+        name.add("预览PDF");
 
 
         ArrayList<Integer> images = new ArrayList<>();
@@ -78,10 +77,10 @@ public class HomeFragment extends Fragment {
         images.add(Color.DKGRAY);
         images.add(Color.DKGRAY);
         images.add(Color.DKGRAY);
-        images.add(Color.DKGRAY);
+
 
 //        images.add(getContext().getResources().getColor(R.color.teal_200));
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 7; i++) {
             module = new Module();
             module.setName(name.get(i));
             module.setImage(images.get(i));

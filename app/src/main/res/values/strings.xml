@@ -31,5 +31,6 @@
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="asset_on_sd">Asset on SD card example</string>
+    <string name="toast_pick_file_error">Unable to pick file. Check status of file manager.</string>
 
 </resources>

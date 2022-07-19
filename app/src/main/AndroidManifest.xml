@@ -28,7 +28,7 @@
             android:name=".ui.ReviewFormActivity_"
             android:exported="true" />
         <activity
-            android:name=".ui.AssetOnSDActivity"
+            android:name=".ui.PDFViewActivity_"
             android:exported="true" />
         <activity
             android:name=".ui.DisplayPdfActivity"

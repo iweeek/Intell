@@ -13,6 +13,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -36,7 +37,9 @@ import com.example.intell.network.ServiceCreator;
 import com.google.android.material.card.MaterialCardView;
 import com.videogo.openapi.bean.req.GetCloudRecordListReq;
 
+import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.ViewById;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,19 +58,29 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 @EActivity(R.layout.activity_review_form)
-public class ReviewFormActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener{
+public class ReviewFormActivity extends AppCompatActivity {
 
-    private static final String TAG = "EnvironmentActivity";
+    private static final String TAG = ReviewFormActivity.class.getSimpleName();
 
-    private MaterialCardView materialCardView;
-    private RadioGroup radioGroup1;
-    private LinearLayout linearLayout;
+    @ViewById
+    MaterialCardView materialCardView;
+    @ViewById(R.id.radio_group_1)
+    RadioGroup radioGroup1;
+    @ViewById(R.id.ll_content)
+    LinearLayout linearLayout;
+    @ViewById(R.id.bt_pdf)
+    Button btPdf;
+    @ViewById(R.id.bt_preview)
+    Button btPreview;
+
+
 
     private boolean rejectedItems; // 0: no rejected items; 1: need to rejected
     private ArrayList<Boolean> rejectedList;
     private ArrayList<Boolean> checkboxList; // checkbox结果列表
 
-    private SwipeRefreshLayout swipeRefreshLayout;
+    @ViewById(R.id.swipeRefresh)
+    SwipeRefreshLayout swipeRefreshLayout;
     private Vibrator mVibrator;
 
     private int px_16dp;
@@ -90,13 +103,15 @@ public class ReviewFormActivity extends AppCompatActivity implements CompoundBut
         super.onCreate(savedInstanceState);
 //        setContentView(R.layout.activity_review_form);
 
+
+
+    }
+
+    @AfterViews
+    void updateViews() {
         init();
 
-        radioGroup1 = findViewById(R.id.radio_group_1);
-
         rejectedList = new ArrayList<>(8);
-
-        swipeRefreshLayout = findViewById(R.id.swipeRefresh);
 
         getEnvironmentByNetwork();
 
@@ -107,14 +122,12 @@ public class ReviewFormActivity extends AppCompatActivity implements CompoundBut
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
-
     }
 
     private void init() {
         // 开启振动
         mVibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
-        linearLayout = findViewById(R.id.ll_content);
 //        ViewStub stub = (ViewStub) findViewById(R.id.layout_cardview_review_content);
         View inflated = getLayoutInflater().inflate(R.layout.cardview_review_content, null);
 //        stub.setLayoutResource(R.layout.cardview_review_content);
@@ -125,7 +138,6 @@ public class ReviewFormActivity extends AppCompatActivity implements CompoundBut
 //        linearLayout.addView(inflated);
 //        linearLayout.addView(inflated);
 
-        materialCardView = findViewById(R.id.materialCardView);
         Resources r = getResources();
         px_16dp = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
@@ -426,13 +438,4 @@ public class ReviewFormActivity extends AppCompatActivity implements CompoundBut
         });
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        System.out.println("good " + buttonView.getText() + isChecked);
-    }
 }
