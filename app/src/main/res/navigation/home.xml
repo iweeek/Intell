@@ -34,6 +34,15 @@
         <action
             android:id="@+id/action_homeScreen_to_environmentActivity"
             app:destination="@id/environmentActivity" />
+        <action
+            android:id="@+id/action_homeScreen_to_reviewFormActivity_"
+            app:destination="@id/reviewFormActivity_" />
+        <action
+            android:id="@+id/action_homeScreen_to_assetOnSDActivity"
+            app:destination="@id/assetOnSDActivity" />
+        <action
+            android:id="@+id/action_homeScreen_to_displayPdfActivity"
+            app:destination="@id/displayPdfActivity" />
     </fragment>
     <!--  暂时没有用到      -->
     <fragment
@@ -44,4 +53,16 @@
         android:id="@+id/environmentActivity"
         android:name="com.example.intell.ui.EnvironmentActivity"
         android:label="EnvironmentActivity" />
+    <activity
+        android:id="@+id/assetOnSDActivity"
+        android:name="com.example.intell.ui.AssetOnSDActivity"
+        android:label="AssetOnSDActivity" />
+    <activity
+        android:id="@+id/displayPdfActivity"
+        android:name="com.example.intell.ui.DisplayPdfActivity"
+        android:label="DisplayPdfActivity" />
+    <activity
+        android:id="@+id/reviewFormActivity_"
+        android:name="com.example.intell.ui.ReviewFormActivity_"
+        android:label="ReviewFormActivity_" />
 </navigation>

@@ -18,6 +18,9 @@
 
     <string name="environment_monitor">环境监测</string>
     <string name="review_form">技术审查表</string>
+    <string name="review_form_title">浙江省建设用地土壤污染状况调查报告技术审查表</string>
+    <string name="reject_items">否决项（以下8项任意一项判定为"涉及"，则评审结论为"不予通过"）</string>
+    <string name="score_items">打分项（共计42项，按照总分计算后80分以下为"不予通过"）</string>
     <string name="title_activity_environment">EnvironmentActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
@@ -27,5 +30,6 @@
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="asset_on_sd">Asset on SD card example</string>
 
 </resources>

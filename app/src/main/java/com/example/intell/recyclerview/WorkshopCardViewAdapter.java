@@ -1,6 +1,9 @@
 package com.example.intell.recyclerview;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,11 +12,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.intell.R;
 import com.example.intell.entry.Module;
+import com.example.intell.ui.MainActivity;
 
 import java.util.ArrayList;
 
@@ -30,6 +35,8 @@ public class WorkshopCardViewAdapter extends RecyclerView.Adapter<WorkshopCardVi
     private String mUrl;
 
     private ArrayList<Module> mDataSet;
+
+    final int REQUEST_CODE = 1;
 
     /**
      * Provide a reference to the type of views that you are using (custom ViewHolder)
@@ -96,9 +103,14 @@ public class WorkshopCardViewAdapter extends RecyclerView.Adapter<WorkshopCardVi
                     Navigation.findNavController(view).navigate(R.id.action_homeScreen_to_environmentActivity);
                 }
                 if (tv.getText().equals(view.getContext().getResources().getString(R.string.review_form))) {
-                    Navigation.findNavController(view).navigate(R.id.action_);
+                    Navigation.findNavController(view).navigate(R.id.action_homeScreen_to_reviewFormActivity_);
                 }
-
+                if (tv.getText().equals("PDF预览")) {
+                    Navigation.findNavController(view).navigate(R.id.action_homeScreen_to_assetOnSDActivity);
+                }
+                if (tv.getText().equals("PDF预览JS")) {
+                    Navigation.findNavController(view).navigate(R.id.action_homeScreen_to_displayPdfActivity);
+                }
             }
         });
     }
@@ -108,4 +120,5 @@ public class WorkshopCardViewAdapter extends RecyclerView.Adapter<WorkshopCardVi
     public int getItemCount() {
         return mDataSet.size();
     }
+
 }
