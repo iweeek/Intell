@@ -7,4 +7,5 @@
     <include app:graph="@navigation/home"/>
     <include app:graph="@navigation/video"/>
     <include app:graph="@navigation/user"/>
+    <include app:graph="@navigation/pdf"/>
 </navigation>

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2019, The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +14,7 @@
   ~ limitations under the License.
   -->
 
-<navigation
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/home"
@@ -35,18 +33,19 @@
             android:id="@+id/action_homeScreen_to_environmentActivity"
             app:destination="@id/environmentActivity" />
         <action
-            android:id="@+id/action_homeScreen_to_reviewFormActivity_"
-            app:destination="@id/reviewFormActivity_" />
-        <action
-            android:id="@+id/action_homeScreen_to_assetOnSDActivity"
-            app:destination="@id/assetOnSDActivity" />
-        <action
             android:id="@+id/action_homeScreen_to_displayPdfActivity"
             app:destination="@id/displayPdfActivity" />
         <action
             android:id="@+id/action_homeScreen_to_PDFViewActivity_"
             app:destination="@id/PDFViewActivity_" />
+        <action
+            android:id="@+id/action_homeScreen_to_reviewFormActivity_"
+            app:destination="@id/reviewFormActivity_" />
+        <action
+            android:id="@+id/action_reviewFormActivity__to_PDFViewActivity_"
+            app:destination="@+id/PDFViewActivity_" />
     </fragment>
+
     <!--  暂时没有用到      -->
     <fragment
         android:id="@+id/environmentFragment"
@@ -57,19 +56,16 @@
         android:name="com.example.intell.ui.EnvironmentActivity"
         android:label="EnvironmentActivity" />
     <activity
-        android:id="@+id/assetOnSDActivity"
-        android:name="com.example.intell.ui.AssetOnSDActivity"
-        android:label="AssetOnSDActivity" />
-    <activity
         android:id="@+id/displayPdfActivity"
         android:name="com.example.intell.ui.DisplayPdfActivity"
         android:label="DisplayPdfActivity" />
     <activity
-        android:id="@+id/reviewFormActivity_"
-        android:name="com.example.intell.ui.ReviewFormActivity_"
-        android:label="ReviewFormActivity_" />
-    <activity
         android:id="@+id/PDFViewActivity_"
         android:name="com.example.intell.ui.PDFViewActivity_"
         android:label="PDFViewActivity_" />
+    <activity
+        android:id="@+id/reviewFormActivity_"
+        android:name="com.example.intell.ui.ReviewFormActivity_"
+        android:label="ReviewFormActivity_" />
+
 </navigation>

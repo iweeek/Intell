@@ -1,11 +1,23 @@
 package com.example.intell.ui;
 
+import static com.videogo.device.DeviceConsts.NO;
+
+import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.os.Vibrator;
+import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.TextWatcher;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.SuperscriptSpan;
 import android.util.Log;
@@ -18,13 +30,19 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.widget.TextViewCompat;
+import androidx.navigation.Navigation;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.ethanco.circleprogresslibrary.TextOneCircleProgress;
@@ -34,11 +52,16 @@ import com.example.intell.databinding.ActivityDisplayPdfBinding;
 import com.example.intell.entry.EnvironmentData;
 import com.example.intell.network.EnvironmentService;
 import com.example.intell.network.ServiceCreator;
+import com.example.intell.tool.AddingTable;
 import com.google.android.material.card.MaterialCardView;
 import com.videogo.openapi.bean.req.GetCloudRecordListReq;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.NonConfigurationInstance;
+import org.androidannotations.annotations.OnActivityResult;
 import org.androidannotations.annotations.ViewById;
 
 import java.io.BufferedReader;
@@ -62,6 +85,9 @@ public class ReviewFormActivity extends AppCompatActivity {
 
     private static final String TAG = ReviewFormActivity.class.getSimpleName();
 
+    String dir;
+    String filePath = "/Download/技术审查表.pdf";
+
     @ViewById
     MaterialCardView materialCardView;
     @ViewById(R.id.radio_group_1)
@@ -72,12 +98,28 @@ public class ReviewFormActivity extends AppCompatActivity {
     Button btPdf;
     @ViewById(R.id.bt_preview)
     Button btPreview;
+    @ViewById(R.id.pdf_progress)
+    ProgressBar progressBar;
+    @ViewById(R.id.environmentLayout)
+    ScrollView scrollView;
+    @ViewById(R.id.tv_top_view)
+    TextView topView;
+    @ViewById(R.id.ll_stick_view)
+    LinearLayout stickView;
+    @ViewById(R.id.ll_bottom_view)
+    LinearLayout bottomView;
 
+    @NonConfigurationInstance
+    Uri uri;
 
-
-    private boolean rejectedItems; // 0: no rejected items; 1: need to rejected
-    private ArrayList<Boolean> rejectedList;
-    private ArrayList<Boolean> checkboxList; // checkbox结果列表
+    private boolean rejectedFlag;
+    private Integer[] rejectedList = new Integer[16]; // 否决项结果
+    private Integer[] scoreList = new Integer[126]; // 打分项结果
+    private EditText[] reviewNotes = new EditText[42];
+    private ArrayList<CheckBox> checkboxList[] = new ArrayList[42]; // checkbox结果列表
+    private MaterialCardView allMaterialCardView[] = new MaterialCardView[50];
+    private boolean choose[] = new boolean[50];
+    private Integer top[] = new Integer[50];
 
     @ViewById(R.id.swipeRefresh)
     SwipeRefreshLayout swipeRefreshLayout;
@@ -97,21 +139,9 @@ public class ReviewFormActivity extends AppCompatActivity {
     LinearLayout.LayoutParams cb_dimensions;
     LinearLayout.LayoutParams et_dimensions;
 
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_review_form);
-
-
-
-    }
-
     @AfterViews
     void updateViews() {
         init();
-
-        rejectedList = new ArrayList<>(8);
 
         getEnvironmentByNetwork();
 
@@ -122,6 +152,103 @@ public class ReviewFormActivity extends AppCompatActivity {
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            scrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+                @Override
+                public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+
+                    if (scrollY > topView.getHeight())
+                        stickView.setVisibility(View.VISIBLE);
+                    else
+                        stickView.setVisibility(View.GONE);
+//                    System.out.println("bottom = " + bottomView.getBottom());
+//                    System.out.println("scrollY = " + scrollY);
+//                    System.out.println("height = " + bottomView.getHeight());
+//                    System.out.println("top = " + bottomView.getTop());
+//                    System.out.println("allMaterialCardView top = " + allMaterialCardView[49].getTop());
+                    if (scrollY < bottomView.getBottom() - 2300)
+                        stickView.setVisibility(View.VISIBLE);
+                    else
+                        stickView.setVisibility(View.GONE);
+                }
+            });
+        }
+    }
+
+    int tops = 0;
+    @Click({R.id.bt_preview, R.id.bt_preview1})
+    void ButtonPreviewWasClicked() {
+        System.out.println("click!");
+//        int top = allLinearLayout[7].getTop();
+        for (int i = 0; i < 50; i++) {
+            if (choose[i] == false) {
+                System.out.println("top" + i + " = " + top[i]);
+                scrollView.smoothScrollTo(0, top[i] - bottomView.getHeight());
+                return;
+            }
+        }
+        ButtonPdfWasClicked();
+    }
+
+    @Click({R.id.bt_pdf, R.id.bt_pdf1})
+    void ButtonPdfWasClicked() {
+        System.out.println("bt_pdf");
+        try {
+            dir = Environment.getExternalStorageDirectory().getCanonicalPath();
+            System.out.println("dir =" + dir); // str=/storage/emulated/0
+
+            progressBar.setVisibility(View.VISIBLE);
+            createPdf();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Click({R.id.bt_view_pdf, R.id.bt_view_pdf1})
+    void ButtonViewPdfWasClicked() {
+        Intent intent = new Intent(this, PDFViewActivity_.class);
+        startActivity(intent);
+    }
+
+    @Background
+    void createPdf() {
+        try {
+            new AddingTable(this, rejectedList, rejectedFlag, scoreList, reviewNotes, checkboxList).manipulatePdf(dir + filePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        for (int i = 0; i < 50; i++) {
+            top[i] = allMaterialCardView[i].getTop();
+        }
+//        System.out.println("top = " + top);
+    }
+
+    public void onPdfCreatedListener() {
+        progressBar.setVisibility(View.INVISIBLE);
+        AlertDialog alertDialog2 = new AlertDialog.Builder(this)
+                .setTitle("完成")
+                .setMessage("生成的PDF已经保存至手机存储空间Download目录。是否查看？")
+                .setIcon(R.mipmap.ic_launcher)
+                .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+//                            Toast.makeText(ReviewFormActivity.this, "", Toast.LENGTH_SHORT).show();
+                        ButtonViewPdfWasClicked();
+                    }
+                })
+                .setNegativeButton("否", new DialogInterface.OnClickListener() {//添加取消
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                    }
+                })
+                .create();
+        alertDialog2.show();
     }
 
     private void init() {
@@ -173,9 +300,6 @@ public class ReviewFormActivity extends AppCompatActivity {
         et_dimensions = new LinearLayout.LayoutParams
                 (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
-        createCardView(1);
-        createCardView(2);
-
         // 否决项 TODO
         for (int i = 0; i < 8; i++) {
 
@@ -188,6 +312,7 @@ public class ReviewFormActivity extends AppCompatActivity {
             LinearLayout ll_textView = new LinearLayout(this);
             TextView tv_star = new TextView(this);
             TextView tv_NO = new TextView(this);
+            LinearLayout ll_editText = new LinearLayout(this);
 
             mcv.setLayoutParams(mcv_dimensions);
             mcv_dimensions.setMargins(px_16dp, 0, px_16dp, px_16dp);
@@ -211,7 +336,7 @@ public class ReviewFormActivity extends AppCompatActivity {
             tv.setLayoutParams(tv_right_dimensions);
             tv_dimensions.setMargins(px_16dp, px_16dp, px_16dp, 0);
             tv_left_dimensions.setMargins(px_16dp, px_16dp, 0, 0);
-            tv_middle_dimensions.setMargins(0, px_16dp, px_16dp/2, 0);
+            tv_middle_dimensions.setMargins(0, px_16dp, px_16dp / 2, 0);
             tv_right_dimensions.setMargins(0, px_16dp, px_16dp, 0);
 //            tv.setId(String.format("tv" + 2000 + i).hashCode());
             tv.setText(contentList.get(i));
@@ -220,7 +345,7 @@ public class ReviewFormActivity extends AppCompatActivity {
             ll.addView(ll_textView);
 
             rg.setLayoutParams(rg_dimensions);
-            rg_dimensions.setMargins(px_20dp*2, 0, px_20dp, 0);
+            rg_dimensions.setMargins(px_20dp * 2, 0, px_20dp, 0);
             rg.setOrientation(LinearLayout.HORIZONTAL);
 
             rb.setLayoutParams(rb_dimensions);
@@ -234,23 +359,37 @@ public class ReviewFormActivity extends AppCompatActivity {
             rg.addView(rb);
             rg.addView(rb2);
 
+            int finalI = i;
             rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(RadioGroup group, int checkedId) {
+                    choose[finalI] = true;
                     mVibrator.vibrate(30);
                     System.out.println("checkedId % 142 +++++ " + checkedId % 142);
-                    switch (checkedId) {
+                    int id = checkedId % 142 - 1;
+                    switch (id % 2) {
+                        case 0:
+                            rejectedList[id] = 1;
+                            rejectedList[id + 1] = 0;
+                            break;
+//                            rejectedFlag = Constant.REJECTED;
                         case 1:
-                            rejectedItems = Constant.REJECTED;
-                            System.out.println("checkedId = " + checkedId);
-                        case R.id.rb_not_involved_1:
-                            rejectedList.add(false);
+                            rejectedList[id] = 1;
+                            rejectedList[id - 1] = 0;
+                            break;
+                    }
+
+                    //更新mcv的top
+                    for (int i = 0; i < 50; i++) {
+                        top[i] = allMaterialCardView[i].getTop();
                     }
                 }
             });
-
+//            rejectedList[2 * i] = rb.isChecked() ? 1 : 0;
+//            rejectedList[2 * i + 1] = rb2.isChecked() ? 1 : 0;
             ll.addView(rg);
             mcv.addView(ll);
+            allMaterialCardView[i] = mcv;
             linearLayout.addView(mcv, i + 2);
         }
         //打分项
@@ -264,9 +403,7 @@ public class ReviewFormActivity extends AppCompatActivity {
             RadioButton rb2 = new RadioButton(this);
             RadioButton rb3 = new RadioButton(this);
             CheckBox cb;
-//            EditText et = new EditText(this);
             LinearLayout ll_editText = new LinearLayout(this);
-
 
             mcv.setLayoutParams(mcv_dimensions);
             mcv_dimensions.setMargins(px_16dp, px_16dp / 2, px_16dp, px_16dp);
@@ -278,14 +415,17 @@ public class ReviewFormActivity extends AppCompatActivity {
             tv.setLayoutParams(tv_dimensions);
             tv_dimensions.setMargins(px_16dp, px_16dp, px_16dp, 0);
             tv.setId(String.format("tv" + 2000 + i).hashCode());
-            // 设置题目的同时，判断是否要加上复选框 TODO
+            // 设置题目的同时，判断是否要加上复选框
             // 3.【地块基本情况】① 地块公告资料或数据地块公告资料或数据是否表述清楚，包含：□地块名称 □地块地址
             cb_dimensions.setMargins(px_20dp, 0, px_20dp, 0);
+            ArrayList<CheckBox> list = null;
             if (contentList.get(i + 8).contains("□")) {
                 String[] split = contentList.get(i + 8).split("□");
                 tv.setText(split[0]);
 //                TextViewCompat.setAutoSizeTextTypeWithDefaults(tv, TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM);
                 ll.addView(tv);
+                if (split.length > 1)
+                    list = new ArrayList<CheckBox>();
                 for (int j = 1; j < split.length; j++) {
                     cb = new CheckBox(this);
                     cb.setLayoutParams(cb_dimensions);
@@ -294,11 +434,13 @@ public class ReviewFormActivity extends AppCompatActivity {
                     cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                         @Override
                         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            
+
                         }
                     });
+                    list.add(cb);
                     ll.addView(cb);
                 }
+                checkboxList[i] = list;
             } else {
                 tv.setText(contentList.get(i + 8));
 //                tv.setTextSize(18);
@@ -323,22 +465,34 @@ public class ReviewFormActivity extends AppCompatActivity {
             rg.addView(rb2);
             rg.addView(rb3);
 
+            int finalI = i;
             rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(RadioGroup group, int checkedId) {
+                    choose[finalI + 8] = true;
                     mVibrator.vibrate(30);
                     System.out.println("checkedId % 142 +++++ " + checkedId % 142);
-                    if (contentList.get(11).contains("□")) {
-                        System.out.println(contentList.get(11));
-                    }
-                    switch (checkedId % 142) {
+
+                    int id = checkedId % 142 - 17;
+                    switch (id % 3) {
+                        case 0:
+                            scoreList[id] = 1;
+                            scoreList[id + 1] = 0;
+                            scoreList[id + 2] = 0;
+                            break;
+//                            rejectedFlag = Constant.REJECTED;
                         case 1:
-                            rejectedItems = Constant.REJECTED;
-                            System.out.println("checkedId = " + checkedId);
-                        case R.id.rb_not_involved_1:
-                            rejectedList.add(false);
+                            scoreList[id] = 1;
+                            scoreList[id - 1] = 0;
+                            scoreList[id + 1] = 0;
+                            break;
+                        case 2:
+                            scoreList[id] = 1;
+                            scoreList[id - 1] = 0;
+                            scoreList[id - 2] = 0;
+                            break;
                     }
-                    int hashcode = ("linearLayout" + checkedId % 142 % 3).hashCode();
+
                     if (checkedId % 142 % 3 == 0 || checkedId % 142 % 3 == 1) {
                         // 部分符合或者不符合，需要显示审查说明
                         if (ll_editText.getChildCount() != 0) {
@@ -354,31 +508,69 @@ public class ReviewFormActivity extends AppCompatActivity {
                         textView.setLayoutParams(tv_dimensions);
                         textView.setText("请输入审查说明");
                         et.setLayoutParams(et_dimensions);
+                        et.addTextChangedListener(new TextWatcher() {
+                            @Override
+                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                            }
+
+                            @Override
+                            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                            }
+
+                            @Override
+                            public void afterTextChanged(Editable s) {
+                                System.out.println("s = " + s);
+                                updateViewTop(finalI);
+                            }
+                        });
                         et_dimensions.setMargins(px_16dp, px_16dp / 2, px_20dp, px_16dp / 2);
                         ll_editText.addView(textView);
                         ll_editText.addView(et);
+                        ll_editText.setVisibility(View.VISIBLE);
+                        reviewNotes[finalI] = et;
                         ll.addView(ll_editText);
                     } else {
                         //符合
-                        if (ll_editText != null)
+                        if (ll_editText.getVisibility() == View.VISIBLE)
+//                        if (ll_editText != null)
 //                            findViewById(100000 + NO).setVisibility(View.GONE);
                             ll_editText.setVisibility(View.GONE);
                     }
+
+                    // 更新mcv的top
+                    updateViewTop(finalI);
+//
+//                    allMaterialCardView[finalI].measure(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+//                    int mheight =  allMaterialCardView[finalI].getMeasuredHeight();
+//                    System.out.println("w = " + mheight);
+//                    int height =  allMaterialCardView[finalI].getHeight();
+//                    System.out.println("w = " + height);
+
                 }
             });
 
             ll.addView(rg);
             mcv.addView(ll);
+            allMaterialCardView[8 + i] = mcv;
             linearLayout.addView(mcv, i + 11);
         }
     }
 
-    private void createCardView(int type) {
-        switch (type) {
-            case 1: // title
-            case 2: // bar
-            case 3:
-        }
+    public void updateViewTop(int finalI) {
+        // 更新mcv的top
+        allMaterialCardView[finalI + 8].post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 50; i++) {
+                    top[i] = allMaterialCardView[i].getTop();
+                }
+                System.out.println("现在top" + (finalI + 8) + " = " + top[finalI+8]);
+                int mheight = allMaterialCardView[finalI + 8].getMeasuredHeight();
+                System.out.println("w = " + mheight);
+                int height = allMaterialCardView[finalI + 8].getHeight();
+                System.out.println("w = " + height);
+            }
+        });
     }
 
     public ArrayList<String> ReadTxtFile(int file) {
@@ -437,5 +629,4 @@ public class ReviewFormActivity extends AppCompatActivity {
             }
         });
     }
-
 }

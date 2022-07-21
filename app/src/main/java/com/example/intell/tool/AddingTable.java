@@ -1,6 +1,8 @@
 package com.example.intell.tool;
 
 
+import com.example.intell.R;
+import com.example.intell.ui.ReviewFormActivity;
 import com.itextpdf.forms.PdfAcroForm;
 import com.itextpdf.forms.fields.PdfButtonFormField;
 import com.itextpdf.forms.fields.PdfFormField;
@@ -26,26 +28,60 @@ import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import static com.itextpdf.forms.fields.PdfFormField.*;
+
+import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+
 public class AddingTable {
+
+    private Activity context;
 
     private static Color FONT_COLOR = new DeviceRgb(20, 20, 20);
     private static PdfFont pdfFontChinese;
-    private static String FONT_FILE_CHINESE = "src/main/resources/font/simsun.ttc,0";
-    private static String SOURCE = "src/main/resources/txt/review_form.txt";
+//    private static String FONT_FILE_CHINESE = "src/main/resources/font/simsun.ttc,0";
+    private static String FONT_FILE_CHINESE = "res/raw/simsun.ttc,0";
     public static final String DEST = "./target/sandbox/acroforms/reporting/addingTable.pdf";
 
-    public static void main(String[] args) throws Exception {
 
-        new AddingTable().manipulatePdf(DEST);
+    private boolean rejectedFlag;
+    private Integer[] rejectedList = new Integer[16]; // 否决项结果
+    private Integer[] scoreList = new Integer[126]; // 打分项结果
+    private Integer notMatch = 0;
+    private Integer partialMatch = 0;
+    private float totalScore = 0;
+    private EditText[] reviewNotes = new EditText[42];
+    private ArrayList<CheckBox> checkboxList[] = new ArrayList[42]; // checkbox结果列表
+
+    public AddingTable() {}
+
+    public AddingTable(Activity context) {
+        this.context = context;
+    }
+
+    public AddingTable(Activity context, Integer[] rejectedList, boolean rejectedFlag, Integer[] scoreList, EditText[] reviewNotes, ArrayList<CheckBox>[] checkboxList) {
+        this.context = context;
+        this.rejectedList = rejectedList;
+        this.rejectedFlag = rejectedFlag;
+        this.scoreList = scoreList;
+        this.reviewNotes = reviewNotes;
+        this.checkboxList = checkboxList;
     }
 
     public void manipulatePdf(String dest) throws Exception {
         // Creating a PdfWriter
-        PdfWriter writer = new PdfWriter(DEST);
+        PdfWriter writer = new PdfWriter(dest);
 
         // Creating a PdfDocument
         PdfDocument pdfDoc = new PdfDocument(writer);
@@ -57,7 +93,7 @@ public class AddingTable {
         // creating a Document
         Document document = new Document(pdfDoc);
 
-        ArrayList<String> contentList = readTxtFile(SOURCE);
+        ArrayList<String> contentList = ReadTxtFile(R.raw.review_form);
 
         // 处理中文问题
         pdfFontChinese = PdfFontFactory.createFont(FONT_FILE_CHINESE, PdfEncodings.IDENTITY_H,
@@ -109,7 +145,13 @@ public class AddingTable {
 //            cell.setNextRenderer(new CheckboxCellRenderer(cell, "cb" + i));
 //            table.addCell(cell);
 
-            table.addCell(new Cell().add(generateParagraph("□涉及  √不涉及", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+            if (rejectedList[2*i] != null && rejectedList[2*i] == 1) {
+                table.addCell(new Cell().add(generateParagraph("√涉及  □不涉及", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+            } else if (rejectedList[2*i+1] != null && rejectedList[2*i+1] == 1){
+                table.addCell(new Cell().add(generateParagraph("□涉及  √不涉及", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+            } else {
+                table.addCell(new Cell().add(generateParagraph("□涉及  √不涉及", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+            }
             table.addCell(new Cell().add(generateParagraph("/", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         }
         table.addCell(new Cell(1, 5).add(generateParagraphWithBold("打分项（共计42项，按照总分计算后80分以下为“不予通过”）", 10.5f, TextAlignment.CENTER)));
@@ -127,22 +169,67 @@ public class AddingTable {
 //                if (array.get(k + 8).matches("[a-zA-Z]*"));
 
 //                System.out.println(".............." + k);
-                table.addCell(new Cell().add(generateParagraph(array.get(k), 12f)));
+                StringBuilder result = new StringBuilder();
+                if (array.get(k).contains("□")) {
+                    String[] split = array.get(k).split("□");
+                    result.append(split[0]);
+//                    if (split.length > 1)
+                    for (int m = 1; m < split.length; m++) {
+                        result.append("\n");
+                        if (checkboxList[k].get(m-1).isChecked()) {
+                            result.append("√");
+                        } else {
+                            result.append("□");
+                        }
+                        result.append(split[m]);
+                    }
+                } else {
+                    result.append(array.get(k));
+                }
+                table.addCell(new Cell().add(generateParagraph(result.toString(), 12f)));
 
-                table.addCell(new Cell().add(generateParagraph("□符合 √部分符合 □不符合", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-                table.addCell(new Cell().add(generateParagraph("/", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                if (scoreList[3*k] != null && scoreList[3*k] == 1) {
+                    table.addCell(new Cell().add(generateParagraph("√符合 □部分符合 □不符合", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                } else if (scoreList[3*k+1] != null && scoreList[3*k+1] == 1) {
+                    table.addCell(new Cell().add(generateParagraph("□符合 √部分符合 □不符合", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                    partialMatch++;
+                } else if (scoreList[3*k+2] != null && scoreList[3*k+2] == 1){
+                    table.addCell(new Cell().add(generateParagraph("□符合 □部分符合 √不符合", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                    notMatch++;
+                } else {
+                    table.addCell(new Cell().add(generateParagraph("□符合 □部分符合 √不符合", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                    notMatch++;
+                }
+
+                if (reviewNotes[k] != null) {
+                    table.addCell(new Cell().add(generateParagraph(String.valueOf(reviewNotes[k].getText()), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                } else {
+                    table.addCell(new Cell().add(generateParagraph("/", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                }
             }
         }
 
         // 总得分
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("总得分", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        table.addCell(new Cell().add(generateParagraphWithBold("__分", 10.5f, TextAlignment.LEFT)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+        totalScore = ((float) (100 * (42 - 1*notMatch - 0.5*partialMatch) / 42));
+        int scale = 2;//设置位数
+        int roundingMode = 4;//表示四舍五入，可以选择其他舍值方式，例如去尾，等等.
+        BigDecimal bd = new BigDecimal((double)totalScore);
+        bd = bd.setScale(scale,roundingMode);
+        totalScore = bd.floatValue();
+        table.addCell(new Cell().add(generateParagraphWithBold("_" + totalScore + "_分", 10.5f, TextAlignment.LEFT)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraphWithBold("总分计算方法：总得分 = 100×(42-1×不符合项目数-0.5×部分符合项目数)/42", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraph("总分计算方法：总得分 = 100×(42-1×不符合项目数-0.5×部分符合项目数)/42", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
 
         // 审查结论
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("审查结论", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        table.addCell(new Cell(1, 3).add(generateParagraphWithBold("√通过 □不通过\n不通过，需要勾选以下选项，可以双选\n□重大瑕疵和纰漏 □80分以下", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+        StringBuilder builder = new StringBuilder();
+        if (totalScore < 80) {
+            builder.append("□通过 √不通过\n不通过，需要勾选以下选项，可以双选\n√重大瑕疵和纰漏 √80分以下");
+        } else {
+            builder.append("√通过 □不通过\n不通过，需要勾选以下选项，可以双选\n□重大瑕疵和纰漏 □80分以下");
+        }
+        table.addCell(new Cell(1, 3).add(generateParagraphWithBold(builder.toString(), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         document.add(table);
 
 
@@ -153,6 +240,22 @@ public class AddingTable {
         document.close();
         System.out.println("Paragraph added");
 
+        // 回调
+//        Thread.sleep(3000);
+        ((ReviewFormActivity) context).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((ReviewFormActivity) context).onPdfCreatedListener();
+            }
+        });
+        // Handler
+//        Handler mainHandler = new Handler(Looper.getMainLooper());
+//        mainHandler.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                ((ReviewFormActivity) context).onPdfCreatedListener();
+//            }
+//        });
     }
 
     private static Paragraph generateParagraph(String str, float size) {
@@ -205,11 +308,11 @@ public class AddingTable {
         return generateParagraph(str, size).setFontColor(color).setTextAlignment(textAlignment).setMultipliedLeading(multipliedLeading);
     }
 
-    public static ArrayList<String> readTxtFile(String src) {
+    public ArrayList<String> ReadTxtFile(int file) {
         ArrayList<String> contentList = new ArrayList<>(); //文件内容字符串
-        File file = new File(src);
+        //如果path是传递过来的参数，可以做一个非目录的判断
         try {
-            InputStream instream = new FileInputStream(file);
+            InputStream instream = context.getResources().openRawResource(file);
             if (instream != null) {
                 InputStreamReader inputreader = new InputStreamReader(instream);
                 BufferedReader buffreader = new BufferedReader(inputreader);
@@ -220,10 +323,10 @@ public class AddingTable {
                 }
                 instream.close();
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("The File doesn't not exist.");
+        } catch (java.io.FileNotFoundException e) {
+            Log.d("TestFile", "The File doesn't not exist.");
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            Log.d("TestFile", e.getMessage());
         }
         return contentList;
     }
@@ -260,9 +363,9 @@ public class AddingTable {
 
             // The 4th parameter is the initial value of checkbox: 'Yes' - checked, 'Off' - unchecked
             // By default, checkbox value type is cross.
-//            PdfButtonFormField checkBox = PdfFormField.createCheckBox(drawContext.getDocument(), rect, name, "Yes", TYPE_CHECK);
-//            checkBox.setVisibility(VISIBLE);
-//            form.addField(checkBox);
+            PdfButtonFormField checkBox = PdfFormField.createCheckBox(drawContext.getDocument(), rect, name, "Yes", TYPE_CHECK);
+            checkBox.setVisibility(VISIBLE);
+            form.addField(checkBox);
         }
     }
 
