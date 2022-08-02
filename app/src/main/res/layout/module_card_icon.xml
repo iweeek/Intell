@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@android:color/white"
+    android:layout_marginLeft="5dp"
+    android:layout_marginRight="5dp"
+    android:elevation="1dp"
+    app:cardElevation="0dp"
+    app:cardPreventCornerOverlap="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/module_image"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@color/browser_actions_divider_color"
+            android:layout_gravity="center"
+            android:scaleType="centerInside" />
+<!--        android:layout_height="@dimen/video_card_image_height"-->
+
+<!--        <com.android.volley.toolbox.NetworkImageView-->
+<!--            android:id="@+id/product_image"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="@dimen/shr_product_card_image_height"-->
+<!--            android:background="?attr/colorPrimaryDark"-->
+<!--            android:scaleType="centerCrop" />-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="4dp"
+            >
+
+            <TextView
+                android:id="@+id/module_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/video_title"
+                android:textAlignment="center"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

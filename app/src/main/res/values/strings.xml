@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">智慧工地</string>
+    <string name="app_name">环境绿盾</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="welcome">欢迎来到工作台!</string>
     <string name="video">视频</string>
     <string name="home">首页</string>
     <string name="user">我的</string>
-    <string name="name">姓名</string>
+    <string name="name">你好</string>
     <string name="workshop">工作台</string>
     <string name="video_image">Video image</string>
     <string name="video_title">Title</string>
@@ -19,8 +19,14 @@
     <string name="environment_monitor">环境监测</string>
     <string name="review_form">技术审查表</string>
     <string name="review_form_title">浙江省建设用地土壤污染状况调查报告技术审查表</string>
+    <string name="check_form_31_title">建设用地土壤污染状况调查采样方案检查记录表</string>
+    <string name="check_form_32_title">建设用地土壤污染状况调查现场采样检查记录表</string>
+    <string name="check_form_33_title">建设用地土壤污染状况调查检验检测机构检查记录表</string>
+    <string name="check_form_34_title">建设用地土壤污染状况调查报告审核记录表</string>
     <string name="reject_items">否决项（以下8项任意一项判定为"涉及"，则评审结论为"不予通过"）</string>
     <string name="score_items">打分项（共计42项，按照总分计算后80分以下为"不予通过"）</string>
+    <string name="notice_1">注：（1）全部检查项目均判定为"是"，才为通过。\n\t\t\t\t（2）任一带 * 检查项目判定为否，即存在严重质量问题，否则为一般质量问题。</string>
+    <string name="notice_2">注：（1）带 * 号项为重点检查项。\n\t\t\t\t（2）3 个（含）以上带 * 号的检查项目判定为否，或累计 6 项（含）以上检查项目判定为否，或材料不支撑判断，则认为调查报告存在严重质量问题。\n\t\t\t\t（3）所有检查项目判定为"是"，才为通过。\n\t\t\t\t（4）其他情况为一般质量问题。</string>
     <string name="title_activity_environment">EnvironmentActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

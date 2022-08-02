@@ -7,9 +7,10 @@
     <uses-permission android:name="android.permission.FLASHLIGHT" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -24,9 +25,11 @@
             android:exported="true"
             android:label="@string/title_activity_environment"
             android:theme="@style/Theme.Intell.NoActionBar" />
-        <activity
-            android:name=".ui.ReviewFormActivity_"
-            android:exported="true" />
+        <activity android:name=".ui.ReviewFormActivity_" android:exported="true" />
+        <activity android:name=".ui.ReviewForm31Activity_" android:exported="true" />
+        <activity android:name=".ui.ReviewForm32Activity_" android:exported="true" />
+        <activity android:name=".ui.ReviewForm33Activity_" android:exported="true" />
+        <activity android:name=".ui.ReviewForm34Activity_" android:exported="true" />
         <activity
             android:name=".ui.PDFViewActivity_"
             android:exported="true" />

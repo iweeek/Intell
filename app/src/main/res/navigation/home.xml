@@ -44,6 +44,18 @@
         <action
             android:id="@+id/action_reviewFormActivity__to_PDFViewActivity_"
             app:destination="@+id/PDFViewActivity_" />
+        <action
+            android:id="@+id/action_homeScreen_to_reviewForm31Activity_"
+            app:destination="@id/reviewForm31Activity_" />
+        <action
+            android:id="@+id/action_homeScreen_to_reviewForm32Activity_"
+            app:destination="@id/reviewForm32Activity_" />
+        <action
+            android:id="@+id/action_homeScreen_to_reviewForm33Activity_"
+            app:destination="@id/reviewForm33Activity_" />
+        <action
+            android:id="@+id/action_homeScreen_to_reviewForm34Activity_"
+            app:destination="@id/reviewForm34Activity_" />
     </fragment>
 
     <!--  暂时没有用到      -->
@@ -67,5 +79,21 @@
         android:id="@+id/reviewFormActivity_"
         android:name="com.example.intell.ui.ReviewFormActivity_"
         android:label="ReviewFormActivity_" />
+    <activity
+        android:id="@+id/reviewForm31Activity_"
+        android:name="com.example.intell.ui.ReviewForm31Activity_"
+        android:label="ReviewForm31Activity_" />
+    <activity
+        android:id="@+id/reviewForm32Activity_"
+        android:name="com.example.intell.ui.ReviewForm32Activity_"
+        android:label="ReviewForm32Activity_" />
+    <activity
+        android:id="@+id/reviewForm33Activity_"
+        android:name="com.example.intell.ui.ReviewForm33Activity_"
+        android:label="ReviewForm33Activity_" />
+    <activity
+        android:id="@+id/reviewForm34Activity_"
+        android:name="com.example.intell.ui.ReviewForm34Activity_"
+        android:label="ReviewForm34Activity_" />
 
 </navigation>

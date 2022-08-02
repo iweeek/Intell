@@ -104,7 +104,7 @@ public class AddingTable {
         ArrayList fonts = new ArrayList();
         fonts.add(pdfFontChinese);
         fonts.add(font);
-        String title = "浙江省建设用地土壤污染状况调查报告技术审查表";
+        String title = context.getResources().getString(R.string.review_form_title);
         document.add(new Paragraph(title).setFontFamily().setFont(pdfFontChinese).setFontSize(16).setFontColor(FONT_COLOR).setTextAlignment(TextAlignment.CENTER));
 
         String name = "项目名称: " + "桐乡市大麻镇2022-7地块土壤污染状况初步调查报告";

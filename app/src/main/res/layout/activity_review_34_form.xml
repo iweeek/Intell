@@ -6,24 +6,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-<!--    <RelativeLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent">-->
-<!--        <ProgressBar-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:id="@+id/pdf_progress"-->
-<!--            android:visibility="invisible"-->
-<!--            android:layout_centerInParent="true"/>-->
-<!--    </RelativeLayout>-->
-
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefresh"
+        android:id="@+id/swipeRefresh31"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ScrollView
-            android:id="@+id/environmentLayout"
+            android:id="@+id/environmentLayout31"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:overScrollMode="never"
@@ -31,7 +20,7 @@
             android:visibility="visible">
 
             <LinearLayout
-                android:id="@+id/ll_content"
+                android:id="@+id/ll_content31"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
@@ -39,9 +28,9 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/tv_top_view"
+                    android:id="@+id/tv_top_view31"
                     android:layout_margin="16dp"
-                    android:text="@string/review_form_title"
+                    android:text="@string/check_form_31_title"
                     android:textAlignment="center"
                     android:textSize="24sp" />
 
@@ -50,40 +39,31 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
-                    android:text="@string/reject_items"
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/notice_2"
                     android:textColor="@color/red"
                     android:textSize="16sp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:text="@string/score_items"
-                    android:textColor="@color/red"
-                    android:textSize="16sp" />
-
-                <ViewStub
-                    android:id="@+id/layout_cardview_review_content"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-
-                <!--                <include layout="@layout/cardview_review_content" />-->
-
-                <!--                <include layout="@layout/cardview_review_content" />-->
+<!--                <TextView-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginStart="16dp"-->
+<!--                    android:layout_marginEnd="16dp"-->
+<!--                    android:text="@string/score_items"-->
+<!--                    android:textColor="@color/red"-->
+<!--                    android:textSize="16sp" />-->
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/ll_bottom_view"
+                    android:id="@+id/ll_bottom_view31"
                     android:layout_marginBottom="200dp"
                     android:orientation="horizontal">
 
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/bt_preview"
+                        android:id="@+id/bt_preview31"
                         android:layout_marginStart="20dp"
                         android:layout_marginEnd="10dp"
                         android:layout_weight="1"
@@ -92,7 +72,7 @@
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/bt_pdf"
+                        android:id="@+id/bt_pdf31"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
                         android:layout_weight="1"
@@ -101,7 +81,7 @@
                     <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/bt_view_pdf"
+                        android:id="@+id/bt_view_pdf31"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="20dp"
                         android:layout_weight="1"
@@ -117,7 +97,7 @@
         android:layout_width="match_parent"
         android:layout_height="5dp"
         android:background="@color/blue"
-        android:id="@+id/scroll_progress"
+        android:id="@+id/scroll_progress31"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:max="10000"
         android:progress="0"
@@ -126,7 +106,7 @@
     <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/pdf_progress"
+        android:id="@+id/pdf_progress31"
         android:layout_centerInParent="true"
         android:visibility="invisible" />
 
@@ -134,7 +114,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
-        android:id="@+id/ll_stick_view"
+        android:id="@+id/ll_stick_view31"
         android:orientation="horizontal"
         android:background="@color/white"
         android:visibility="gone">
@@ -142,7 +122,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_preview1"
+            android:id="@+id/bt_preview31_1"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
@@ -151,7 +131,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_pdf1"
+            android:id="@+id/bt_pdf31_1"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
@@ -160,7 +140,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_view_pdf1"
+            android:id="@+id/bt_view_pdf31_1"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="20dp"
             android:layout_weight="1"

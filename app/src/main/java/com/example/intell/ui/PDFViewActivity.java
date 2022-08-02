@@ -16,6 +16,7 @@
 package com.example.intell.ui;
 
 import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -27,6 +28,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -112,6 +114,7 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
 
     @AfterViews
     void afterViews() {
+
         pickFile();
         pdfView.setBackgroundColor(Color.LTGRAY);
         if (uri != null) {
@@ -153,9 +156,13 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
 
     @OnActivityResult(REQUEST_CODE)
     public void onResult(int resultCode, Intent intent) {
+        System.out.println("resultCode = " + resultCode);
         if (resultCode == RESULT_OK) {
             uri = intent.getData();
             displayFromUri(uri);
+        }
+        if (resultCode == RESULT_CANCELED) {
+            PDFViewActivity.this.finish();
         }
     }
 
@@ -222,6 +229,7 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
