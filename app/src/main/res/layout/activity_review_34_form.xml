@@ -67,7 +67,7 @@
                         android:layout_marginStart="20dp"
                         android:layout_marginEnd="10dp"
                         android:layout_weight="1"
-                        android:text="检查" />
+                        android:text="@string/string_check" />
 
                     <Button
                         android:layout_width="wrap_content"
@@ -76,7 +76,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
                         android:layout_weight="1"
-                        android:text="生成PDF" />
+                        android:text="@string/string_generate" />
 
                     <Button
                         android:layout_width="wrap_content"
@@ -85,8 +85,23 @@
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="20dp"
                         android:layout_weight="1"
-                        android:text="查看PDF" />
+                        android:text="@string/string_view" />
                 </LinearLayout>
+
+                <ImageView
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:id="@+id/iv_photo"/>
+
+                <com.sendtion.xrichtext.RichTextEditor
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/et_new_content"
+                    app:rt_editor_text_line_space="6dp"
+                    app:rt_editor_image_height="500"
+                    app:rt_editor_image_bottom="10"
+                    app:rt_editor_text_init_hint="在这里输入内容"
+                    app:rt_editor_text_size="16sp" />
 
             </LinearLayout>
         </ScrollView>
@@ -126,7 +141,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
-            android:text="检查" />
+            android:text="@string/string_check" />
 
         <Button
             android:layout_width="wrap_content"
@@ -135,7 +150,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
-            android:text="生成PDF" />
+            android:text="@string/string_generate" />
 
         <Button
             android:layout_width="wrap_content"
@@ -144,6 +159,15 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="20dp"
             android:layout_weight="1"
-            android:text="查看PDF" />
+            android:text="@string/string_view" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bt_photo"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="20dp"
+            android:layout_weight="1"
+            android:text="拍照" />
     </LinearLayout>
 </RelativeLayout>

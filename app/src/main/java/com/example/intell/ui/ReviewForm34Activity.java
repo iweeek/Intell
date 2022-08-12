@@ -1,15 +1,20 @@
 package com.example.intell.ui;
 
 
+import android.app.Activity;
+import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Vibrator;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -20,8 +25,10 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -29,18 +36,33 @@ import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.intell.R;
+import com.example.intell.common.CommonUtil;
+import com.example.intell.common.ImageUtils;
+import com.example.intell.common.MyGlideEngine;
+import com.example.intell.common.SDCardUtil;
 import com.example.intell.entry.EnvironmentData;
 import com.example.intell.network.EnvironmentService;
 import com.example.intell.network.ServiceCreator;
-import com.example.intell.tool.AddingTable32;
 import com.example.intell.tool.AddingTable34;
+import com.example.intell.tool.Utils;
 import com.google.android.material.card.MaterialCardView;
-import com.itextpdf.layout.properties.VerticalAlignment;
+import com.rex.editor.common.EssFile;
+import com.rex.editor.common.FilesUtils;
+import com.rex.editor.view.RichEditorNew;
+import com.sendtion.xrichtext.RichTextEditor;
+import com.zhihu.matisse.Matisse;
+import com.zhihu.matisse.MimeType;
+import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -50,12 +72,22 @@ import org.androidannotations.annotations.NonConfigurationInstance;
 import org.androidannotations.annotations.ViewById;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import okhttp3.internal.Util;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -70,6 +102,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ReviewForm34Activity extends AppCompatActivity {
 
     private static final String TAG = ReviewForm34Activity.class.getSimpleName();
+    private static final int CAMERA_PERMISSION_CODE = 1;
+    private static final int WRITE_PERMISSION_CODE = 2;
+    private static final int READ_PERMISSION_CODE = 3;
+    private static final int REQUEST_CODE_CHOOSE = 23;//定义请求码常量
+    public final static int RESULT_CHOOSE = 123;
+    private static final int RESULT_CAMERA = 124;
+
 
     String dir;
     String filePath;
@@ -96,6 +135,11 @@ public class ReviewForm34Activity extends AppCompatActivity {
     LinearLayout bottomView;
     @ViewById(R.id.swipeRefresh31)
     SwipeRefreshLayout swipeRefreshLayout;
+    @ViewById(R.id.iv_photo)
+    ImageView imageViewPhoto;
+    //    @ViewById(R.id.et_new_content)
+    RichTextEditor richTextEditor;
+    RichEditorNew currentRichEditor;
 
     @NonConfigurationInstance
     Uri uri;
@@ -104,19 +148,33 @@ public class ReviewForm34Activity extends AppCompatActivity {
     private Integer[] checkList = new Integer[55]; // 否决项结果
     //    private Integer[] scoreList = new Integer[126]; // 打分项结果
     private EditText[] reviewNotes = new EditText[20];
+    private String[] reviewNoteStr = new String[20];
     //    private ArrayList<CheckBox> checkboxList[] = new ArrayList[42]; // checkbox结果列表
     private MaterialCardView allMaterialCardView[] = new MaterialCardView[20];
+    private LinearLayout ll_photos[] = new LinearLayout[20];
     private boolean choose[] = new boolean[20];
     private Integer top[] = new Integer[20];
+    RichEditorNew[] richEditors = new RichEditorNew[20];
+    ArrayList<List<String>> imgList = new ArrayList<>(20);
     private int baseNo = -1;
 
     private Vibrator mVibrator;
 
+    private File outputImage;
+    private Uri imageUri;
+    private int takePhoto = 1;
+    private static final int CAMERA_RESULT = 1;
+    private ActivityResultLauncher<Uri> mGetContent;
+
     private int px_16dp;
     private int px_20dp;
 
+    private int screenWidth;
+    private int screenHeight;
+
     LinearLayout.LayoutParams mcv_dimensions;
     LinearLayout.LayoutParams ll_dimensions;
+    LinearLayout.LayoutParams ll_photo_dimensions;
     LinearLayout.LayoutParams tv_dimensions;
     LinearLayout.LayoutParams tv_left_dimensions;
     LinearLayout.LayoutParams tv_middle_dimensions;
@@ -126,12 +184,18 @@ public class ReviewForm34Activity extends AppCompatActivity {
     LinearLayout.LayoutParams rb3_dimensions;
     LinearLayout.LayoutParams cb_dimensions;
     LinearLayout.LayoutParams et_dimensions;
+    //    LinearLayout.LayoutParams ret_dimensions;
+    LinearLayout.LayoutParams bt_dimensions;
+    LinearLayout.LayoutParams iv_dimensions;
 
     @AfterViews
     void updateViews() {
         init();
         topView.setText(getResources().getString(R.string.check_form_34_title));
         getEnvironmentByNetwork();
+
+        screenWidth = CommonUtil.getScreenWidth(this);
+        screenHeight = CommonUtil.getScreenHeight(this);
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -165,6 +229,78 @@ public class ReviewForm34Activity extends AppCompatActivity {
                 }
             });
         }
+
+        //////////////////////////////////////////////////////////////////////////////////////
+        outputImage = new File(getExternalCacheDir(), "output_image.jpg");
+//        File externalStorageDirectory = Environment.getExternalStorageDirectory();
+//        File dataDirectory = Environment.getDataDirectory();
+//        File downloadCacheDirectory = Environment.getDownloadCacheDirectory();
+//        File rootDirectory = Environment.getRootDirectory();
+//        File externalCacheDir = getExternalCacheDir();
+//        File dataDir = getDataDir();
+//        File cacheDir = getCacheDir();
+//        File filesDir = getFilesDir();
+//        File codeCacheDir = getCodeCacheDir();
+
+//        System.out.println("牛啊");
+//        System.out.println(externalStorageDirectory);
+//        System.out.println(dataDirectory);
+//        System.out.println(downloadCacheDirectory);
+//        System.out.println(rootDirectory);
+//        System.out.println(externalCacheDir);
+//        System.out.println(dataDir);
+//        System.out.println(cacheDir);
+//        System.out.println(filesDir);
+//        System.out.println(codeCacheDir);
+
+        /*
+        Utils.requestPermission(ReviewForm34Activity.this);
+
+        if (outputImage.exists()) {
+            outputImage.delete();
+        }
+        try {
+            outputImage.createNewFile();
+            //  如果运行设备的系统高于Android 7.0
+            //  就调用FileProvider的getUriForFile()方法将File对象转换成一个封装过的Uri对象。
+            //  该方法接收3个参数：Context对象， 任意唯一的字符串， 创建的File对象。
+            //  这样做的原因：Android 7.0 开始，直接使用本地真实路径的Uri是被认为是不安全的，会抛出FileUriExposedException异常；
+            //      而FileProvider是一种特殊的ContentProvider，他使用了和ContentProvider类似的机制对数据进行保护，可以选择性地将封装过的Uri共享给外部。
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                imageUri = FileProvider.getUriForFile(this, "com.example.intell.provider", outputImage);
+            } else {
+                //  否则，就调用Uri的fromFile()方法将File对象转换成Uri对象
+                imageUri = Uri.fromFile(outputImage);
+            }
+            //  启动相机
+            Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+            //  指定图片的输出地址,这样拍下的照片会被输出到output_image.jpg中。
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+
+            //打开照相机
+//            Intent openCameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//            imageUri = Utils.getOutputMediaFileUri(this);
+//            openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+//
+//            //Android7.0添加临时权限标记，此步千万别忘了
+//            openCameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//            startActivityForResult(openCameraIntent, CAMERA_RESULT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+         */
+
+
+        mGetContent = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                new ActivityResultCallback<Boolean>() {
+                    @Override
+                    public void onActivityResult(Boolean result) {
+                        System.out.println("返回了哦");
+                    }
+                });
     }
 
     int tops = 0;
@@ -206,10 +342,177 @@ public class ReviewForm34Activity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Click(R.id.bt_photo)
+    void ButtonTakePhoto() {
+        /*outputImage = new File(getExternalCacheDir(), "output_image.jpg");
+        if (outputImage.exists()) {
+            outputImage.delete();
+        }
+        try {
+            outputImage.createNewFile();
+            //  如果运行设备的系统高于Android 7.0
+            //  就调用FileProvider的getUriForFile()方法将File对象转换成一个封装过的Uri对象。
+            //  该方法接收3个参数：Context对象， 任意唯一的字符串， 创建的File对象。
+            //  这样做的原因：Android 7.0 开始，直接使用本地真实路径的Uri是被认为是不安全的，会抛出FileUriExposedException异常；
+            //      而FileProvider是一种特殊的ContentProvider，他使用了和ContentProvider类似的机制对数据进行保护，可以选择性地将封装过的Uri共享给外部。
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                imageUri = FileProvider.getUriForFile(this, "com.example.intell.provider", outputImage);
+            } else {
+                //  否则，就调用Uri的fromFile()方法将File对象转换成Uri对象
+                imageUri = Uri.fromFile(outputImage);
+            }
+            //  启动相机
+            Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+            //  指定图片的输出地址,这样拍下的照片会被输出到output_image.jpg中。
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+//            registerForActivityResult(intent, takePhoto);
+//            ActivityResultLauncher<String> mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
+//                    new ActivityResultCallback<Uri>() {
+//                @Override
+//                public void onActivityResult(Uri result) {
+//                    System.out.println("返回了哦");
+//                }
+//            });
+//            File file = new File(getFilesDir(), "picFromCamera");
+//            Uri uri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", file);
+
+
+//            ActivityResultLauncher<Void> mTakePicture =
+//                    registerForActivityResult(new ActivityResultContracts.TakePicturePreview(), new ActivityResultCallback<Bitmap>() {
+//                        @Override
+//                        public void onActivityResult(Bitmap thumbnail) {
+//                            mThumbnailLiveData.setValue(thumbnail);
+//                        }
+//                    });
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        */
+
+//        mGetContent.launch(imageUri);
+
+        //打开照相机
+        Intent openCameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        imageUri = Utils.getOutputMediaFileUri(this, 0);
+        System.out.println("hahaha = " + imageUri);
+        System.out.println(Environment.getExternalStorageDirectory().getAbsolutePath());
+        openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+        //Android7.0添加临时权限标记，此步千万别忘了
+        openCameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        startActivityForResult(openCameraIntent, CAMERA_RESULT);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case CAMERA_RESULT:
+                if (resultCode != RESULT_OK) {
+                    return;
+                }
+                System.out.println("hahah" + imageUri);
+                Bitmap bitmap;
+                int id = -1;
+                try {
+                    //这里imageUri就是上面获取到的url，下面会讲到
+                    bitmap = Utils.getBitmapFormUri(this, imageUri);
+                    String[] split = imageUri.toString().split("_");
+                    for (String s : split) {
+                        System.out.println(s);
+                    }
+                    if (split.length > 1 && split[split.length - 1] != null)
+                        id = Integer.parseInt(split[split.length - 1].split("\\.")[0]);
+
+                    if (id != -1) {
+                        ImageView iv = new ImageView(this);
+                        iv.setLayoutParams(iv_dimensions);
+                        iv.setImageBitmap(bitmap);
+                        ll_photos[id].addView(iv);
+                    }
+                    imageViewPhoto.setImageBitmap(bitmap);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case REQUEST_CODE_CHOOSE:
+                //异步方式插入图片
+                insertImagesSync(data);
+                break;
+            case RESULT_CAMERA:
+                System.out.println("uri = " + imageUri.getPath());
+                if (imageUri != null) {
+//                    String abUrl = FilesUtils.getPath(ReviewForm34Activity.this, imageUri);
+                    String abUrl = imageUri.getPath();
+                    abUrl = abUrl.substring(5);
+                    Log.i("rex", "abUrl:" + abUrl);
+                    EssFile essFile = new EssFile(abUrl);
+                    if (essFile.isImage() || essFile.isGif()) {
+                        currentRichEditor.insertImage(essFile.getAbsolutePath());
+                        currentRichEditor.setFontSize(4);
+                        currentRichEditor.setEditorFontSize(18);
+                    }
+                }
+                break;
+            case RESULT_CHOOSE:
+                if (data == null) return;
+                // 使用EXTRA_ALLOW_MULTIPLE时，当用户选择的内容不止一个时，intent.getExtra()intent中的数据不返回，而是返回intent ClipData，仅SDK 18及更高版本支持。
+                if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) && (null == data.getData())) {
+                    ClipData clipdata = data.getClipData();
+                    for (int i = 0; i < clipdata.getItemCount(); i++) {
+//                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), clipdata.getItemAt(i).getUri());
+                        Uri uri = clipdata.getItemAt(i).getUri();
+                        System.out.println("uri = " + uri.getPath());
+                        if (uri != null) {
+                            String abUrl = FilesUtils.getPath(ReviewForm34Activity.this, uri);
+                            Log.i("rex", "abUrl:" + abUrl);
+                            EssFile essFile = new EssFile(abUrl);
+                            if (essFile.isImage() || essFile.isGif()) {
+                                System.out.println("第 " + i + "个" + essFile.getAbsolutePath());
+                                currentRichEditor.insertImage(essFile.getAbsolutePath());
+                                currentRichEditor.setFontSize(4);
+                                currentRichEditor.setEditorFontSize(18);
+                            }
+                        }
+                    }
+                } else {
+                    Uri uri = data.getData();
+                    System.out.println("uri = " + uri.getPath());
+                    if (uri != null) {
+                        String abUrl = FilesUtils.getPath(ReviewForm34Activity.this, uri);
+                        Log.i("rex", "abUrl:" + abUrl);
+                        EssFile essFile = new EssFile(abUrl);
+                        if (essFile.isImage() || essFile.isGif()) {
+                            System.out.println("1 =" + essFile.getAbsolutePath());
+                            currentRichEditor.insertImage(essFile.getAbsolutePath());
+                            currentRichEditor.setFontSize(4);
+                            currentRichEditor.setEditorFontSize(18);
+                        } else if (essFile.isVideo()) {
+                            System.out.println("2");
+                            currentRichEditor.insertVideo(essFile.getAbsolutePath());
+                        } else if (essFile.isAudio()) {
+                            System.out.println("3");
+                            currentRichEditor.insertAudio(essFile.getAbsolutePath());
+                        } else {
+                            System.out.println("4");
+                            currentRichEditor.insertFileWithDown(essFile.getAbsolutePath(), "文件:" + essFile.getName());
+                        }
+                    }
+                }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
+        }
+    }
+
     @Background
     void createPdf() {
         try {
-            new AddingTable34(this, checkList, rejectedFlag, reviewNotes).manipulatePdf(dir + filePath);
+            new AddingTable34(this, checkList, rejectedFlag, reviewNotes, imgList).manipulatePdf(dir + filePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -296,6 +599,14 @@ public class ReviewForm34Activity extends AppCompatActivity {
                 (ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         et_dimensions = new LinearLayout.LayoutParams
                 (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+//        ret_dimensions = new LinearLayout.LayoutParams
+//                (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        bt_dimensions = new LinearLayout.LayoutParams
+                (ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        ll_photo_dimensions = new LinearLayout.LayoutParams
+                (ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        iv_dimensions = new LinearLayout.LayoutParams
+                (ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         // 否决项 TODO
         for (int i = 0; i < 20; i++) {
@@ -316,6 +627,11 @@ public class ReviewForm34Activity extends AppCompatActivity {
             TextView tv_star = new TextView(this);
             TextView tv_NO = new TextView(this);
             LinearLayout ll_editText = new LinearLayout(this);
+            LinearLayout ll_editText_inner = new LinearLayout(this);
+            LinearLayout ll_photo = new LinearLayout(this);
+            Button photoButton = new Button(this);
+            Button imageButton = new Button(this);
+            ImageView imageView = null;
 
             mcv.setLayoutParams(mcv_dimensions);
             mcv_dimensions.setMargins(px_16dp, 0, px_16dp, px_16dp);
@@ -515,11 +831,184 @@ public class ReviewForm34Activity extends AppCompatActivity {
                         }
                         ll_editText.setLayoutParams(ll_dimensions);
                         ll_editText.setOrientation(LinearLayout.VERTICAL);
+                        ll_editText_inner.setLayoutParams(ll_dimensions);
+                        ll_editText_inner.setOrientation(LinearLayout.HORIZONTAL);
 //                        ll_editText.setId(100000 + NO);
 
                         TextView textView = new TextView(ReviewForm34Activity.this);
                         EditText et = new EditText(ReviewForm34Activity.this);
+                        // RichTextEditor
+                        richTextEditor = new RichTextEditor(ReviewForm34Activity.this);
+//                        if(richTextEditor.getParent() != null) {
+//                            ((ViewGroup)richTextEditor.getParent()).removeView(richTextEditor); // <- fix
+//                        }
+                        richTextEditor.setRtTextSize(48);
+//                        richTextEditor.setLayoutParams(ret_dimensions);
+                        richTextEditor.setRtImageHeight(600);
+                        richTextEditor.setRtImageBottom(10);
+                        richTextEditor.setRtTextSize(48);
+                        richTextEditor.setRtTextColor(Color.BLACK);
+                        richTextEditor.setRtTextInitHint("请输入");
+//                        richTextEditor.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+//                            @Override
+//                            public void onFocusChange(View view, boolean b) {
+//                                for (RichTextEditor.EditData buildEditDatum : richTextEditor.buildEditData()) {
+//                                    System.out.println("imagePath = " + buildEditDatum.imagePath);
+//                                    System.out.println("inputStr = " + buildEditDatum.inputStr);
+//                                }
+//                            }
+//                        });
+                        richTextEditor.changeTextSize();
+
+//                        richTextEditor.setOnTouchListener(new View.OnTouchListener() {
+//                            @Override
+//                            public boolean onTouch(View v, MotionEvent event) {
+//                                richTextEditor.requestFocus();
+//                                return false;
+//                            }
+//                        });
+
+                        //////
+
+                        currentRichEditor = new RichEditorNew(ReviewForm34Activity.this);
+//                        richEditor.setEditorFontSize(30);
+                        currentRichEditor.setFontSize(4);
+                        currentRichEditor.setEditorFontSize(18);
+                        LinearLayout.LayoutParams ret_dimensions = new LinearLayout.LayoutParams
+                                (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                        currentRichEditor.setLayoutParams(ret_dimensions);
+                        ret_dimensions.setMargins(px_16dp, 0, px_16dp, px_16dp);
+                        //自动为视频添加缩略图
+                        currentRichEditor.setNeedAutoPosterUrl(true);
+                        currentRichEditor.focusEditor();
+                        currentRichEditor.setEditorHeight(100);
+//                        richEditor.setEditorHeight(100);
+                        currentRichEditor.setBackgroundColor(Color.LTGRAY);
+                        currentRichEditor.setHint("请输入审查说明（文字+图片）");
+
+                        currentRichEditor.setOnTextChangeListener(new RichEditorNew.OnTextChangeNewListener() {
+                            @Override
+                            public void onTextChange(String s) {
+                                // TODO 将 <br> 转变为换行符
+
+                                String replaceHTML = Utils.replaceHTML(s);
+                                System.out.println("replaceHTML = " + replaceHTML);
+                                System.out.println("gaibian = " + s);
+                                int count = 1;
+                                int index = 0;
+                                index = s.indexOf("<br>");
+                                if (index != -1)
+                                    count++;
+                                while (index < s.length()) {
+                                    index = s.indexOf("<br>", index + 1);
+                                    if (index != -1)
+                                        count++;
+                                    else
+                                        break;
+                                }
+                                if (s.length() > 8 && s.substring(s.length() - 8).equals("<br><br>"))
+                                    count--;
+                                System.out.println(count);
+                                System.out.println("有 " + count + "行");
+                                int contentHeight = currentRichEditor.getContentHeight();
+                                int measuredHeight = currentRichEditor.getMeasuredHeight();
+                                int height = currentRichEditor.getHeight();
+                                int minimumHeight = currentRichEditor.getMinimumHeight();
+                                System.out.println("contentHeight = " + contentHeight);
+                                System.out.println("measuredHeight = " + measuredHeight);
+                                System.out.println("height = " + height);
+                                System.out.println("minimumHeight = " + minimumHeight);
+                                // 计算图片数量
+                                String orginHtml = currentRichEditor.getHtml();
+                                System.out.println("orginHtml = " + orginHtml + "   currentRichEditor = " + currentRichEditor);
+                                List<String> allSrcAndHref = currentRichEditor.getAllSrcAndHref();
+                                int max = allSrcAndHref.size();
+                                // 获取 img 字符串
+                                imgList.add(finalI, allSrcAndHref);
+
+                                int threshold = 0;
+                                int sum = 0;
+                                int prev = 0;
+                                prev = s.indexOf("<img");
+                                if (prev != -1) {
+                                    threshold = 1;
+
+                                    while (prev < s.length()) {
+                                        System.out.println("index = " + prev);
+                                        int next = s.indexOf("<img", prev + 1);
+                                        if (next == -1) {
+                                            if (threshold == 1)
+                                                sum++; // index
+                                            break;
+                                        }
+                                        System.out.println("next = " + next);
+                                        String middle = s.substring(prev, next);
+                                        int middleIndex = middle.indexOf("<br>");
+                                        if (prev != -1 && middleIndex != -1) { // 中间有 <br>
+                                            if (threshold == 1)
+                                                sum++;
+                                            threshold = 1;
+                                        } else if (prev != -1 && middleIndex == -1) { // 中间没有 <br>
+                                            if (threshold == 1)
+                                                sum++;
+                                            threshold++;
+                                        }
+
+                                        if (threshold == 4) {
+                                            threshold = 1;
+                                        }
+                                        prev = next;
+                                    }
+                                }
+
+                                //  richEditor.setEditorHeight(100);
+                                int height1 = count >= 4 ? 66 * (count - 4) + 275 : 275;
+                                height1 = height1 + sum * 250;
+                                System.out.println("设置高度 = " + height1);
+                                ret_dimensions.height = height1;
+//                                richEditor.setMinimumHeight(24*i);
+                                currentRichEditor.setLayoutParams(ret_dimensions);
+
+                            }
+                        });
+                        openSoftKeyInput();
+                        currentRichEditor.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                            @Override
+                            public void onFocusChange(View view, boolean b) {
+                                // 切换
+//                                richEditors[finalI].focusEditor();
+//                                currentRichEditor = richEditors[finalI];
+                                System.out.println(finalI + " hasFocus = " + b + "   currentRichEditor = " + currentRichEditor);
+
+                                currentRichEditor.setFontSize(4);
+                                currentRichEditor.setEditorFontSize(18);
+                                String originHTML = currentRichEditor.getHtml();
+                                if (originHTML != null) {
+                                    System.out.println("originHTML = " + originHTML);
+                                    String replaceHTML = Utils.replaceHTML(originHTML);
+                                    reviewNoteStr[finalI] = replaceHTML;
+
+                                    for (int i = 0; i < 20; i++) {
+                                        System.out.println("reviewNoteStr[" + i + "] " + reviewNoteStr[i]);
+                                    }
+                                }
+                            }
+                        });
+
+                        currentRichEditor.setClickable(true);
+                        currentRichEditor.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                // 切换
+                                richEditors[finalI].focusEditor();
+                                currentRichEditor = richEditors[finalI];
+                                System.out.println(">>>>点击了" + finalI );
+                            }
+                        });
+
                         textView.setLayoutParams(tv_dimensions);
+                        tv_dimensions.weight = 1;
+                        tv_dimensions.setMargins(px_16dp, 0, px_16dp, 0);
                         textView.setText("请输入审查说明");
                         et.setLayoutParams(et_dimensions);
                         et.addTextChangedListener(new TextWatcher() {
@@ -537,9 +1026,54 @@ public class ReviewForm34Activity extends AppCompatActivity {
                                 updateViewTop(finalI);
                             }
                         });
-                        et_dimensions.setMargins(px_16dp, px_16dp / 2, px_20dp, px_16dp / 2);
-                        ll_editText.addView(textView);
-                        ll_editText.addView(et);
+                        et_dimensions.setMargins(px_16dp, 0, px_20dp, px_16dp / 2);
+                        ll_editText_inner.addView(textView);
+                        // 拍照按钮
+                        photoButton.setLayoutParams(bt_dimensions);
+                        bt_dimensions.setMargins(0, 0, px_20dp, 0);
+                        bt_dimensions.weight = 1;
+                        photoButton.setText("拍照");
+                        photoButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+//                                Utils.checkPermission(ReviewForm34Activity.this, Manifest.permission.CAMERA, CAMERA_PERMISSION_CODE);
+//                                Utils.checkPermission(ReviewForm34Activity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE, WRITE_PERMISSION_CODE);
+                                // Checking if permission is not granted
+
+                                richEditors[finalI].focusEditor();
+                                currentRichEditor = richEditors[finalI];
+                                //打开照相机
+                                takePhoto(finalI);
+                            }
+                        });
+                        ll_editText_inner.addView(photoButton);
+                        // 图片按钮
+                        imageButton.setLayoutParams(bt_dimensions);
+                        imageButton.setText("图片");
+                        imageButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                closeSoftKeyInput();//关闭软键盘
+//                                callGallery();
+                                richEditors[finalI].focusEditor();
+                                currentRichEditor = richEditors[finalI];
+//                                System.out.println("richEditor = " + richEditors[finalI]);
+//                                System.out.println("finalI = " + finalI);
+                                openDirChooseFile();
+                            }
+                        });
+                        ll_editText_inner.addView(imageButton);
+                        ll_photo.setLayoutParams(ll_photo_dimensions);
+                        ll_photo_dimensions.setMargins(px_16dp, 0, px_16dp, 0);
+                        ll_photo.setOrientation(LinearLayout.HORIZONTAL);
+                        ll_photos[finalI] = ll_photo;
+
+                        ll_editText.addView(ll_editText_inner);
+                        ll_editText.addView(ll_photo);
+//                        ll_editText.addView(richTextEditor);
+                        ll_editText.addView(currentRichEditor);
+                        richEditors[finalI] = currentRichEditor;
+//                        ll_editText.addView(et);
                         ll_editText.setVisibility(View.VISIBLE);
                         reviewNotes[finalI] = et;
                         ll.addView(ll_editText);
@@ -731,7 +1265,7 @@ public class ReviewForm34Activity extends AppCompatActivity {
             if (checkedId % 2 == 0)
                 return true;
         } else if (checkedId == 36 || checkedId == 37) {
-            if (checkedId  == 37) return true;
+            if (checkedId == 37) return true;
         } else {
             if (checkedId > 8 && checkedId <= 35) {
                 if ((checkedId - 8) % 3 == 0 || (checkedId - 8) % 3 == 2) return true;
@@ -775,12 +1309,32 @@ public class ReviewForm34Activity extends AppCompatActivity {
                 }
                 instream.close();
             }
-        } catch (java.io.FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             Log.d("TestFile", "The File doesn't not exist.");
         } catch (IOException e) {
             Log.d("TestFile", e.getMessage());
         }
         return contentList;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+//        if (requestCode == CAMERA_PERMISSION_CODE) {
+//            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                //打开照相机
+//                Intent openCameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//                imageUri = Utils.getOutputMediaFileUri(ReviewForm34Activity.this);
+//                openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+//
+//                //Android7.0添加临时权限标记，此步千万别忘了
+//                openCameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//                startActivityForResult(openCameraIntent, CAMERA_RESULT);
+//            } else {
+//                Toast.makeText(ReviewForm34Activity.this, "Camera Permission Denied", Toast.LENGTH_SHORT).show();
+//            }
+//        }
     }
 
     private void getEnvironmentByNetwork() {
@@ -815,5 +1369,154 @@ public class ReviewForm34Activity extends AppCompatActivity {
                 t.printStackTrace();
             }
         });
+    }
+
+    /**
+     * 关闭软键盘
+     */
+    private void closeSoftKeyInput() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        //boolean isOpen=imm.isActive();//isOpen若返回true，则表示输入法打开
+        if (imm != null && imm.isActive() && getCurrentFocus() != null) {
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                    InputMethodManager.HIDE_NOT_ALWAYS);
+            //imm.hideSoftInputFromInputMethod();//据说无效
+            //imm.hideSoftInputFromWindow(et_content.getWindowToken(), 0); //强制隐藏键盘
+            //如果输入法在窗口上已经显示，则隐藏，反之则显示
+            //imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    }
+
+    /**
+     * 调用图库选择
+     */
+    private void callGallery() {
+//        //调用系统图库
+//        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//        intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");// 相片类型
+//        startActivityForResult(intent, 1);
+
+        Matisse.from(this)
+                .choose(MimeType.of(MimeType.JPEG, MimeType.PNG, MimeType.GIF))//照片视频全部显示MimeType.allOf()
+                .countable(true)//true:选中后显示数字;false:选中后显示对号
+                .maxSelectable(3)//最大选择数量为9
+                //.addFilter(new GifSizeFilter(320, 320, 5 * Filter.K * Filter.K))
+                .gridExpectedSize(getResources().getDimensionPixelSize(R.dimen.grid_expected_size))//图片显示表格的大小
+                .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)//图像选择和预览活动所需的方向
+                .thumbnailScale(0.85f)//缩放比例
+                .theme(R.style.Matisse_Zhihu)//主题  暗色主题 R.style.Matisse_Dracula
+                .imageEngine(new MyGlideEngine())//图片加载方式，Glide4需要自定义实现
+                .capture(true) //是否提供拍照功能，兼容7.0系统需要下面的配置
+                //参数1 true表示拍照存储在共有目录，false表示存储在私有目录；参数2与 AndroidManifest中authorities值相同，用于适配7.0系统 必须设置
+                .captureStrategy(new CaptureStrategy(true, "com.sendtion.matisse.fileprovider"))//存储到哪里
+                .forResult(REQUEST_CODE_CHOOSE);//请求码
+    }
+
+    /**
+     * 异步方式插入图片
+     */
+    private void insertImagesSync(final Intent data) {
+//        insertDialog.show();
+
+        Observable.create(new ObservableOnSubscribe<String>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<String> emitter) {
+                        try {
+                            richTextEditor.measure(0, 0);
+                            List<Uri> mSelected = Matisse.obtainResult(data);
+                            // 可以同时插入多张图片
+                            for (Uri imageUri : mSelected) {
+                                String imagePath = SDCardUtil.getFilePathFromUri(ReviewForm34Activity.this, imageUri);
+                                //Log.e(TAG, "###path=" + imagePath);
+                                Bitmap bitmap = ImageUtils.getSmallBitmap(imagePath, screenWidth, screenHeight);//压缩图片
+                                //bitmap = BitmapFactory.decodeFile(imagePath);
+                                imagePath = SDCardUtil.saveToSdCard(bitmap);
+                                //Log.e(TAG, "###imagePath="+imagePath);
+                                emitter.onNext(imagePath);
+                            }
+
+                            // 测试插入网络图片 http://pics.sc.chinaz.com/files/pic/pic9/201904/zzpic17414.jpg
+                            //emitter.onNext("http://pics.sc.chinaz.com/files/pic/pic9/201903/zzpic16838.jpg");
+//                    emitter.onNext("http://b.zol-img.com.cn/sjbizhi/images/10/640x1136/1572123845476.jpg");
+//                    emitter.onNext("https://img.ivsky.com/img/tupian/pre/201903/24/richu_riluo-013.jpg");
+
+                            emitter.onComplete();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            emitter.onError(e);
+                        }
+                    }
+                })
+                //.onBackpressureBuffer()
+                .subscribeOn(Schedulers.io())//生产事件在io
+                .observeOn(AndroidSchedulers.mainThread())//消费事件在UI线程
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onComplete() {
+//                        if (insertDialog != null && insertDialog.isShowing()) {
+//                            insertDialog.dismiss();
+//                        }
+//                        showToast("图片插入成功");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+//                        if (insertDialog != null && insertDialog.isShowing()) {
+//                            insertDialog.dismiss();
+//                        }
+//                        showToast("图片插入失败:"+e.getMessage());
+                    }
+
+                    @Override
+                    public void onSubscribe(Disposable d) {
+//                        subsInsert = d;
+                    }
+
+                    @Override
+                    public void onNext(String imagePath) {
+                        richTextEditor.insertImage(imagePath);
+                    }
+                });
+    }
+
+    /**
+     * 这里采用系统自带方法，可替换为你更方便的自定义文件选择器
+     */
+    public void openDirChooseFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);//多选
+        startActivityForResult(intent, RESULT_CHOOSE);
+    }
+
+    /**
+     * 这里采用系统自带相机
+     */
+    public void takePhoto(int finalI) {
+        Intent openCameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        imageUri = Utils.getOutputMediaFileUri(ReviewForm34Activity.this, finalI);
+        System.out.println("imageUri = " + imageUri);
+        openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+        //Android7.0添加临时权限标记，此步千万别忘了
+        openCameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//                                startActivityForResult(openCameraIntent, CAMERA_RESULT);
+        startActivityForResult(openCameraIntent, RESULT_CAMERA);
+    }
+
+    /**
+     * 打开软键盘
+     */
+    private void openSoftKeyInput(){
+        InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+        //boolean isOpen=imm.isActive();//isOpen若返回true，则表示输入法打开
+        if (imm != null && !imm.isActive() && currentRichEditor != null){
+            currentRichEditor.requestFocus();
+            //第二个参数可设置为0
+            //imm.showSoftInput(et_content, InputMethodManager.SHOW_FORCED);//强制显示
+            imm.showSoftInputFromInputMethod(currentRichEditor.getWindowToken(),
+                    InputMethodManager.SHOW_FORCED);
+        }
     }
 }

@@ -8,6 +8,7 @@ import com.itextpdf.forms.fields.PdfButtonFormField;
 import com.itextpdf.forms.fields.PdfFormField;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
@@ -19,6 +20,7 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
@@ -31,6 +33,7 @@ import com.itextpdf.layout.renderer.IRenderer;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import static com.itextpdf.forms.fields.PdfFormField.TYPE_CHECK;
@@ -57,19 +60,20 @@ public class AddingTable34 {
     private EditText[] reviewNotes = new EditText[20];
     private int seriousIssueCount = 0;
     private int otherIssueCount = 0;
+    ArrayList<List<String>> imgList = new ArrayList<>(20);
 
-    public AddingTable34() {
-    }
+
 
     public AddingTable34(Activity context) {
         this.context = context;
     }
 
-    public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes) {
+    public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes, ArrayList<List<String>> imgList) {
         this.context = context;
         this.checkList = checkList;
         this.rejectedFlag = rejectedFlag;
         this.reviewNotes = reviewNotes;
+        this.imgList = imgList;
     }
 
     public void manipulatePdf(String dest) throws Exception {
@@ -251,7 +255,14 @@ public class AddingTable34 {
                 }
 
                 if (reviewNotes[k] != null) {
-                    table.addCell(new Cell().add(generateParagraph(String.valueOf(reviewNotes[k].getText()), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+//                    table.addCell(new Cell().add(generateParagraph(String.valueOf(reviewNotes[k].getText()), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                    Cell cell = new Cell();
+                    List<String> imgs = imgList.get(k);
+                    for (int p = 0; p < imgs.size(); p++) {
+                        cell.add(new Image(ImageDataFactory.create(imgs.get(p))).setWidth(UnitValue.createPercentValue(100)));
+                    }
+                    table.addCell(cell);
+//                    table.addCell(new Cell().add(new Image(ImageDataFactory.create(IMG)).setWidth(UnitValue.createPercentValue(100))));
                 } else {
                     table.addCell(new Cell().add(generateParagraph("/", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                 }

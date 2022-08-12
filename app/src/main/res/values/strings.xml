@@ -14,6 +14,9 @@
     <string name="string_stop_play">"停止"</string>
     <string name="string_pause_play">"暂停"</string>
     <string name="string_start_play">"播放"</string>
+    <string name="string_check">"检查"</string>
+    <string name="string_generate">"生成"</string>
+    <string name="string_view">"查看"</string>
     <string name="string_not_found_recordfile">"未找到录像文件"</string>
 
     <string name="environment_monitor">环境监测</string>
