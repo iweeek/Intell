@@ -62,7 +62,9 @@ public class AddingTable {
     private Integer partialMatch = 0;
     private float totalScore = 0;
     private EditText[] reviewNotes = new EditText[42];
+    private String[] reviewNoteStr = new String[50];
     private ArrayList<CheckBox> checkboxList[] = new ArrayList[42]; // checkbox结果列表
+    ArrayList<List<String>> imgList = new ArrayList<>(50);
 
     public AddingTable() {}
 

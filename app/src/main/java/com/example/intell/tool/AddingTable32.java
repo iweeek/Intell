@@ -8,6 +8,7 @@ import com.itextpdf.forms.fields.PdfButtonFormField;
 import com.itextpdf.forms.fields.PdfFormField;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
@@ -18,10 +19,14 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
+import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.properties.AreaBreakType;
+import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
@@ -31,12 +36,14 @@ import com.itextpdf.layout.renderer.IRenderer;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import static com.itextpdf.forms.fields.PdfFormField.TYPE_CHECK;
 import static com.itextpdf.forms.fields.PdfFormField.VISIBLE;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.util.Log;
 import android.widget.EditText;
 
@@ -55,11 +62,21 @@ public class AddingTable32 {
     private Integer partialMatch = 0;
     private float totalScore = 0;
     private EditText[] reviewNotes = new EditText[18];
+    private String[] reviewNoteStr = new String[18];
+    ArrayList<List<String>> imgList = new ArrayList<>(18);
 
     public AddingTable32() {}
 
     public AddingTable32(Activity context) {
         this.context = context;
+    }
+
+    public AddingTable32(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList) {
+        this.context = context;
+        this.checkList = checkList;
+        this.rejectedFlag = rejectedFlag;
+        this.reviewNoteStr = reviewNoteStr;
+        this.imgList = imgList;
     }
 
     public AddingTable32(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes) {
@@ -203,11 +220,28 @@ public class AddingTable32 {
                     notMatch++;
                 }
 
-                if (reviewNotes[k] != null) {
-                    table.addCell(new Cell().add(generateParagraph(String.valueOf(reviewNotes[k].getText()), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                if (reviewNoteStr[k] != null) {
+                    String s = reviewNoteStr[k];
+                    int index = 0;
+                    int count = 0;
+                    while (index < s.length()) {
+                        if (s.indexOf("<img>") != -1) {
+                            count++;
+                            if (s.indexOf("<img>", s.indexOf("<img>") + 1) != -1)
+                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "");
+                            else
+                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "\n");
+                        } else {
+                            break;
+                        }
+                    }
+                    System.out.println("sss = " + s);
+                    table.addCell(new Cell().add(generateParagraph(s, 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+
                 } else {
                     table.addCell(new Cell().add(generateParagraph("/", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                 }
+
             }
         }
 
@@ -225,6 +259,35 @@ public class AddingTable32 {
         document.add(table);
 
         document.add(generateParagraph("注：（1）检查要点基于《建设用地土壤污染状况调查技术导则》（HJ 25.1—2019）、《建设用地土壤污染风险管控和修复监测技术导则》（HJ25.2—2019）、《地块土壤和地下水中挥发性有机物采样技术导则》（HJ 1019—2019）、《地下水环境监测技术规范》（HJ 164—2020）、《土壤环境监测技术规范》（HJ/T 166—2004）等相关技术导则设定。 \n （2）调查不涉及的检查要点不判定检查结果。", 10.5f, TextAlignment.LEFT));
+
+        pdfDoc.setDefaultPageSize(PageSize.A4);
+        // Adding an empty page
+        pdfDoc.addNewPage();
+        document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+
+        Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
+        paragraph.setPageNumber(7);
+        document.add(paragraph);
+
+        System.out.println("imgList = " + imgList.size());
+        for (int i = 0; i < 18; i++) {
+            List<String> stringList = imgList.get(i);
+            if (stringList != null) {
+                for (int j = 0; j < stringList.size(); j++) {
+                    document.add(generateParagraph("图" + (i+1) + "-" + (j+1) + "\n", 10.5f, TextAlignment.LEFT));
+
+                    // 获得缩略图，大幅减小文件体积
+                    Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] data = baos.toByteArray();
+                    Image image = new Image(ImageDataFactory.create(data));
+                    image.scaleToFit(700, 700);
+                    document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
+//                    document.add(new Image(ImageDataFactory.create(stringList.get(j))).setHeight(UnitValue.createPercentValue(50)));
+                }
+            }
+        }
 
         document.close();
         System.out.println("Paragraph added");

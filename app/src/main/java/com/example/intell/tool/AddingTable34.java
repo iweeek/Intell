@@ -19,11 +19,14 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
+import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.properties.AreaBreakType;
+import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
@@ -40,8 +43,11 @@ import static com.itextpdf.forms.fields.PdfFormField.TYPE_CHECK;
 import static com.itextpdf.forms.fields.PdfFormField.VISIBLE;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.util.Log;
 import android.widget.EditText;
+
+import kotlin.Unit;
 
 public class AddingTable34 {
 
@@ -58,14 +64,18 @@ public class AddingTable34 {
     private Integer partialMatch = 0;
     private float totalScore = 0;
     private EditText[] reviewNotes = new EditText[20];
+    private String[] reviewNoteStr = new String[20];
     private int seriousIssueCount = 0;
     private int otherIssueCount = 0;
     ArrayList<List<String>> imgList = new ArrayList<>(20);
 
 
-
-    public AddingTable34(Activity context) {
+    public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList) {
         this.context = context;
+        this.checkList = checkList;
+        this.rejectedFlag = rejectedFlag;
+        this.reviewNoteStr = reviewNoteStr;
+        this.imgList = imgList;
     }
 
     public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes, ArrayList<List<String>> imgList) {
@@ -236,7 +246,7 @@ public class AddingTable34 {
                             table.addCell(new Cell().add(generateParagraph("√是\n□否\n□材料不支撑判断", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                         } else if (checkList[(k - 4) * 3 + 1 + 8] != null && checkList[(k - 4) * 3 + 1 + 8] == 1) {
                             table.addCell(new Cell().add(generateParagraph("□是\n√否\n□材料不支撑判断", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-                        } else if (checkList[(k - 4) * 3 + 2 + 8] != null && checkList[(k - 4) * 3 + 2 + 8] == 1){
+                        } else if (checkList[(k - 4) * 3 + 2 + 8] != null && checkList[(k - 4) * 3 + 2 + 8] == 1) {
                             table.addCell(new Cell().add(generateParagraph("□是\n□否\n√材料不支撑判断", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                         } else {
                             table.addCell(new Cell().add(generateParagraph("□是\n□否\n√材料不支撑判断", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
@@ -246,7 +256,7 @@ public class AddingTable34 {
                             table.addCell(new Cell().add(generateParagraph("√是\n□否\n□材料不支撑判断", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                         } else if (checkList[(k - 14) * 3 + 1 + 37] != null && checkList[(k - 14) * 3 + 1 + 37] == 1) {
                             table.addCell(new Cell().add(generateParagraph("□是\n√否\n□材料不支撑判断", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-                        } else if (checkList[(k - 14) * 3 + 2 + 37] != null && checkList[(k - 14) * 3 + 2 + 37] == 1){
+                        } else if (checkList[(k - 14) * 3 + 2 + 37] != null && checkList[(k - 14) * 3 + 2 + 37] == 1) {
                             table.addCell(new Cell().add(generateParagraph("□是\n□否\n√材料不支撑判断", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                         } else {
                             table.addCell(new Cell().add(generateParagraph("□是\n□否\n√材料不支撑判断", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
@@ -254,15 +264,24 @@ public class AddingTable34 {
                     }
                 }
 
-                if (reviewNotes[k] != null) {
-//                    table.addCell(new Cell().add(generateParagraph(String.valueOf(reviewNotes[k].getText()), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-                    Cell cell = new Cell();
-                    List<String> imgs = imgList.get(k);
-                    for (int p = 0; p < imgs.size(); p++) {
-                        cell.add(new Image(ImageDataFactory.create(imgs.get(p))).setWidth(UnitValue.createPercentValue(100)));
+                if (reviewNoteStr[k] != null) {
+                    String s = reviewNoteStr[k];
+                    int index = 0;
+                    int count = 0;
+                    while (index < s.length()) {
+                        if (s.indexOf("<img>") != -1) {
+                            count++;
+                            if (s.indexOf("<img>", s.indexOf("<img>") + 1) != -1)
+                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "");
+                            else
+                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "\n");
+                        } else {
+                            break;
+                        }
                     }
-                    table.addCell(cell);
-//                    table.addCell(new Cell().add(new Image(ImageDataFactory.create(IMG)).setWidth(UnitValue.createPercentValue(100))));
+                    System.out.println("sss = " + s);
+                    table.addCell(new Cell().add(generateParagraph(s, 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+
                 } else {
                     table.addCell(new Cell().add(generateParagraph("/", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                 }
@@ -294,8 +313,38 @@ public class AddingTable34 {
 
         document.add(generateParagraph("注：（1）带*号项为重点检查项，3个（含）以上带*号的检查项目判定为否，或累计6项（含）以上检查项目判定为否或材料不支撑判断，则认为调查报告存在严重质量问题；所有检查项目判定为是，则认为暂未发现问题；其他情况为一般质量问题。\n（2）检查要点基于国家发布的相关技术导则设定。\n（3）第三阶段土壤污染状况调查检查要点同第二阶段土壤污染状况调查-详细采样分析。\n（4）对不同调查环节，不涉及的检查要点不判定检查结果；检查要点中不涉及的内容不作为检查结果的判定依据。", 10.5f, TextAlignment.LEFT));
 
+        pdfDoc.setDefaultPageSize(PageSize.A4);
+        // Adding an empty page
+        pdfDoc.addNewPage();
+        document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+
+        Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
+        paragraph.setPageNumber(7);
+        document.add(paragraph);
+
+        System.out.println("imgList = " + imgList.size());
+        for (int i = 0; i < 20; i++) {
+            List<String> stringList = imgList.get(i);
+            if (stringList != null) {
+                for (int j = 0; j < stringList.size(); j++) {
+                    document.add(generateParagraph("图" + (i+1) + "-" + (j+1) + "\n", 10.5f, TextAlignment.LEFT));
+
+                    // 获得缩略图，大幅减小文件体积
+                    Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] data = baos.toByteArray();
+                    Image image = new Image(ImageDataFactory.create(data));
+                    image.scaleToFit(700, 700);
+                    document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
+//                    document.add(new Image(ImageDataFactory.create(stringList.get(j))).setHeight(UnitValue.createPercentValue(50)));
+                }
+            }
+        }
+
         document.close();
         System.out.println("Paragraph added");
+
 
         // 回调
         ((ReviewForm34Activity) context).runOnUiThread(new Runnable() {

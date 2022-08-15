@@ -1,14 +1,18 @@
 package com.example.intell.ui;
 
 
+import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Vibrator;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -19,6 +23,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -28,6 +33,7 @@ import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -38,7 +44,11 @@ import com.example.intell.network.EnvironmentService;
 import com.example.intell.network.ServiceCreator;
 import com.example.intell.tool.AddingTable31;
 import com.example.intell.tool.AddingTable32;
+import com.example.intell.tool.Utils;
 import com.google.android.material.card.MaterialCardView;
+import com.rex.editor.common.EssFile;
+import com.rex.editor.common.FilesUtils;
+import com.rex.editor.view.RichEditorNew;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -68,6 +78,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ReviewForm32Activity extends AppCompatActivity {
 
     private static final String TAG = ReviewForm32Activity.class.getSimpleName();
+    public final static int RESULT_CHOOSE = 123;
+    private static final int RESULT_CAMERA = 124;
 
     String dir;
     String filePath;
@@ -94,6 +106,7 @@ public class ReviewForm32Activity extends AppCompatActivity {
     LinearLayout bottomView;
     @ViewById(R.id.swipeRefresh31)
     SwipeRefreshLayout swipeRefreshLayout;
+    RichEditorNew currentRichEditor;
 
     @NonConfigurationInstance
     Uri uri;
@@ -102,13 +115,17 @@ public class ReviewForm32Activity extends AppCompatActivity {
     private Integer[] checkList = new Integer[36]; // 否决项结果
 //    private Integer[] scoreList = new Integer[126]; // 打分项结果
     private EditText[] reviewNotes = new EditText[18];
-//    private ArrayList<CheckBox> checkboxList[] = new ArrayList[42]; // checkbox结果列表
+    private String[] reviewNoteStr = new String[18];
+    //    private ArrayList<CheckBox> checkboxList[] = new ArrayList[42]; // checkbox结果列表
     private MaterialCardView allMaterialCardView[] = new MaterialCardView[18];
     private boolean choose[] = new boolean[18];
     private Integer top[] = new Integer[18];
+    RichEditorNew[] richEditors = new RichEditorNew[18];
+    ArrayList<List<String>> imgList = new ArrayList<>(18);
     private int baseNo = -1;
 
     private Vibrator mVibrator;
+    private Uri imageUri;
 
     private int px_16dp;
     private int px_20dp;
@@ -123,6 +140,8 @@ public class ReviewForm32Activity extends AppCompatActivity {
     LinearLayout.LayoutParams rb_dimensions;
     LinearLayout.LayoutParams cb_dimensions;
     LinearLayout.LayoutParams et_dimensions;
+    LinearLayout.LayoutParams bt_dimensions;
+
 
     @AfterViews
     void updateViews() {
@@ -202,10 +221,82 @@ public class ReviewForm32Activity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case RESULT_CAMERA:
+                System.out.println("uri = " + imageUri.getPath());
+                if (imageUri != null) {
+//                    String abUrl = FilesUtils.getPath(ReviewForm34Activity.this, imageUri);
+                    String abUrl = imageUri.getPath();
+                    abUrl = abUrl.substring(5);
+                    Log.i("rex", "abUrl:" + abUrl);
+                    EssFile essFile = new EssFile(abUrl);
+                    if (essFile.isImage() || essFile.isGif()) {
+                        currentRichEditor.insertImage(essFile.getAbsolutePath());
+                        currentRichEditor.setFontSize(4);
+                        currentRichEditor.setEditorFontSize(18);
+                    }
+                }
+                break;
+            case RESULT_CHOOSE:
+                if (data == null) return;
+                // 使用EXTRA_ALLOW_MULTIPLE时，当用户选择的内容不止一个时，intent.getExtra()intent中的数据不返回，而是返回intent ClipData，仅SDK 18及更高版本支持。
+                if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) && (null == data.getData())) {
+                    ClipData clipdata = data.getClipData();
+                    for (int i = 0; i < clipdata.getItemCount(); i++) {
+//                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), clipdata.getItemAt(i).getUri());
+                        Uri uri = clipdata.getItemAt(i).getUri();
+                        System.out.println("uri = " + uri.getPath());
+                        if (uri != null) {
+                            String abUrl = FilesUtils.getPath(ReviewForm32Activity.this, uri);
+                            Log.i("rex", "abUrl:" + abUrl);
+                            EssFile essFile = new EssFile(abUrl);
+                            if (essFile.isImage() || essFile.isGif()) {
+                                System.out.println("第 " + i + "个" + essFile.getAbsolutePath());
+                                currentRichEditor.insertImage(essFile.getAbsolutePath());
+                                currentRichEditor.setFontSize(4);
+                                currentRichEditor.setEditorFontSize(18);
+                            }
+                        }
+                    }
+                } else {
+                    Uri uri = data.getData();
+                    System.out.println("uri = " + uri.getPath());
+                    if (uri != null) {
+                        String abUrl = FilesUtils.getPath(ReviewForm32Activity.this, uri);
+                        Log.i("rex", "abUrl:" + abUrl);
+                        EssFile essFile = new EssFile(abUrl);
+                        if (essFile.isImage() || essFile.isGif()) {
+                            System.out.println("1 =" + essFile.getAbsolutePath());
+                            currentRichEditor.insertImage(essFile.getAbsolutePath());
+                            currentRichEditor.setFontSize(4);
+                            currentRichEditor.setEditorFontSize(18);
+                        } else if (essFile.isVideo()) {
+                            System.out.println("2");
+                            currentRichEditor.insertVideo(essFile.getAbsolutePath());
+                        } else if (essFile.isAudio()) {
+                            System.out.println("3");
+                            currentRichEditor.insertAudio(essFile.getAbsolutePath());
+                        } else {
+                            System.out.println("4");
+                            currentRichEditor.insertFileWithDown(essFile.getAbsolutePath(), "文件:" + essFile.getName());
+                        }
+                    }
+                }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
+        }
+    }
+
     @Background
     void createPdf() {
         try {
-            new AddingTable32(this, checkList, rejectedFlag, reviewNotes).manipulatePdf(dir + filePath);
+            getReviewNotes();
+            new AddingTable32(this, checkList, rejectedFlag, reviewNoteStr, imgList).manipulatePdf(dir + filePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -217,7 +308,6 @@ public class ReviewForm32Activity extends AppCompatActivity {
         for (int i = 0; i < 18; i++) {
             top[i] = allMaterialCardView[i].getTop();
         }
-//        System.out.println("top = " + top);
     }
 
     public void onPdfCreatedListener() {
@@ -290,6 +380,8 @@ public class ReviewForm32Activity extends AppCompatActivity {
                 (ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         et_dimensions = new LinearLayout.LayoutParams
                 (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        bt_dimensions = new LinearLayout.LayoutParams
+                (ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         // 否决项 TODO
         for (int i = 0; i < 18; i++) {
@@ -304,6 +396,9 @@ public class ReviewForm32Activity extends AppCompatActivity {
             TextView tv_star = new TextView(this);
             TextView tv_NO = new TextView(this);
             LinearLayout ll_editText = new LinearLayout(this);
+            LinearLayout ll_editText_inner = new LinearLayout(this);
+            Button photoButton = new Button(this);
+            Button imageButton = new Button(this);
 
             mcv.setLayoutParams(mcv_dimensions);
             mcv_dimensions.setMargins(px_16dp, 0, px_16dp, px_16dp);
@@ -421,11 +516,128 @@ public class ReviewForm32Activity extends AppCompatActivity {
                         }
                         ll_editText.setLayoutParams(ll_dimensions);
                         ll_editText.setOrientation(LinearLayout.VERTICAL);
-//                        ll_editText.setId(100000 + NO);
+                        ll_editText_inner.setLayoutParams(ll_dimensions);
+                        ll_editText_inner.setOrientation(LinearLayout.HORIZONTAL);
+
+                        //////
+                        currentRichEditor = new RichEditorNew(ReviewForm32Activity.this);
+//                        richEditor.setEditorFontSize(30);
+                        currentRichEditor.setFontSize(4);
+                        currentRichEditor.setEditorFontSize(18);
+                        LinearLayout.LayoutParams ret_dimensions = new LinearLayout.LayoutParams
+                                (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                        currentRichEditor.setLayoutParams(ret_dimensions);
+                        ret_dimensions.setMargins(px_16dp, 0, px_16dp, px_16dp);
+                        //自动为视频添加缩略图
+                        currentRichEditor.setNeedAutoPosterUrl(true);
+                        currentRichEditor.focusEditor();
+                        currentRichEditor.setEditorHeight(100);
+                        currentRichEditor.setBackgroundColor(Color.LTGRAY);
+                        currentRichEditor.setHint("请输入审查说明（文字+图片）");
+
+                        currentRichEditor.setOnTextChangeListener(new RichEditorNew.OnTextChangeNewListener() {
+                            @Override
+                            public void onTextChange(String s) {
+                                // TODO 将 <br> 转变为换行符
+
+                                String replaceHTML = Utils.replaceHTML(s);
+                                System.out.println("replaceHTML = " + replaceHTML);
+                                System.out.println("gaibian = " + s);
+                                int count = 1;
+                                int index = 0;
+                                index = s.indexOf("<br>");
+                                if (index != -1)
+                                    count++;
+                                while (index < s.length()) {
+                                    index = s.indexOf("<br>", index + 1);
+                                    if (index != -1)
+                                        count++;
+                                    else
+                                        break;
+                                }
+                                if (s.length() > 8 && s.substring(s.length() - 8).equals("<br><br>"))
+                                    count--;
+                                System.out.println(count);
+                                System.out.println("有 " + count + "行");
+//                                int contentHeight = currentRichEditor.getContentHeight();
+//                                int measuredHeight = currentRichEditor.getMeasuredHeight();
+//                                int height = currentRichEditor.getHeight();
+//                                int minimumHeight = currentRichEditor.getMinimumHeight();
+//                                System.out.println("contentHeight = " + contentHeight);
+//                                System.out.println("measuredHeight = " + measuredHeight);
+//                                System.out.println("height = " + height);
+//                                System.out.println("minimumHeight = " + minimumHeight);
+                                // 计算图片数量
+                                String orginHtml = currentRichEditor.getHtml();
+                                System.out.println("orginHtml = " + orginHtml + "   currentRichEditor = " + currentRichEditor);
+//                                List<String> allSrcAndHref = currentRichEditor.getAllSrcAndHref();
+//                                int max = allSrcAndHref.size();
+//                                // 获取 img 字符串
+//                                imgList.add(finalI, allSrcAndHref);
+
+                                int threshold = 0;
+                                int sum = 0;
+                                int prev = 0;
+                                prev = s.indexOf("<img");
+                                if (prev != -1) {
+                                    threshold = 1;
+
+                                    while (prev < s.length()) {
+                                        System.out.println("index = " + prev);
+                                        int next = s.indexOf("<img", prev + 1);
+                                        if (next == -1) {
+                                            if (threshold == 1)
+                                                sum++; // index
+                                            break;
+                                        }
+                                        System.out.println("next = " + next);
+                                        String middle = s.substring(prev, next);
+                                        int middleIndex = middle.indexOf("<br>");
+                                        if (prev != -1 && middleIndex != -1) { // 中间有 <br>
+                                            if (threshold == 1)
+                                                sum++;
+                                            threshold = 1;
+                                        } else if (prev != -1 && middleIndex == -1) { // 中间没有 <br>
+                                            if (threshold == 1)
+                                                sum++;
+                                            threshold++;
+                                        }
+
+                                        if (threshold == 4) {
+                                            threshold = 1;
+                                        }
+                                        prev = next;
+                                    }
+                                }
+
+                                //  richEditor.setEditorHeight(100);
+                                int height1 = count >= 4 ? 66 * (count - 4) + 275 : 275;
+                                height1 = height1 + sum * 250;
+                                System.out.println("设置高度 = " + height1);
+                                ret_dimensions.height = height1;
+//                                richEditor.setMinimumHeight(24*i);
+                                currentRichEditor.setLayoutParams(ret_dimensions);
+
+                                updateViewTop(finalI);
+                            }
+                        });
+                        currentRichEditor.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                            @Override
+                            public void onFocusChange(View view, boolean b) {
+                                // 切换
+                                System.out.println(finalI + " hasFocus = " + b + "   currentRichEditor = " + currentRichEditor);
+
+                                currentRichEditor.setFontSize(4);
+                                currentRichEditor.setEditorFontSize(18);
+
+                            }
+                        });
 
                         TextView textView = new TextView(ReviewForm32Activity.this);
                         EditText et = new EditText(ReviewForm32Activity.this);
                         textView.setLayoutParams(tv_dimensions);
+                        tv_dimensions.weight = 1;
+                        tv_dimensions.setMargins(px_16dp, 0, px_16dp, 0);
                         textView.setText("请输入审查说明");
                         et.setLayoutParams(et_dimensions);
                         et.addTextChangedListener(new TextWatcher() {
@@ -444,8 +656,42 @@ public class ReviewForm32Activity extends AppCompatActivity {
                             }
                         });
                         et_dimensions.setMargins(px_16dp, px_16dp / 2, px_20dp, px_16dp / 2);
-                        ll_editText.addView(textView);
-                        ll_editText.addView(et);
+                        ll_editText_inner.addView(textView);
+
+                        // 拍照按钮
+                        photoButton.setLayoutParams(bt_dimensions);
+                        bt_dimensions.setMargins(0, 0, px_20dp, 0);
+                        bt_dimensions.weight = 1;
+                        photoButton.setText("拍照");
+                        photoButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                richEditors[finalI].focusEditor();
+                                currentRichEditor = richEditors[finalI];
+                                //打开照相机
+                                takePhoto(finalI);
+                            }
+                        });
+                        ll_editText_inner.addView(photoButton);
+                        // 图片按钮
+                        imageButton.setLayoutParams(bt_dimensions);
+                        imageButton.setText("图片");
+                        imageButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                closeSoftKeyInput();//关闭软键盘
+//                                callGallery();
+                                richEditors[finalI].focusEditor();
+                                currentRichEditor = richEditors[finalI];
+                                openDirChooseFile();
+                            }
+                        });
+                        ll_editText_inner.addView(imageButton);
+
+                        ll_editText.addView(ll_editText_inner);
+                        ll_editText.addView(currentRichEditor);
+                        richEditors[finalI] = currentRichEditor;
+//                        ll_editText.addView(et);
                         ll_editText.setVisibility(View.VISIBLE);
                         reviewNotes[finalI] = et;
                         ll.addView(ll_editText);
@@ -466,170 +712,7 @@ public class ReviewForm32Activity extends AppCompatActivity {
             allMaterialCardView[i] = mcv;
             linearLayout.addView(mcv, i + 1);
         }
-        //打分项
-        /*
-        for (int i = 0; i < 42; i++) {
-            final int NO = i;
-            MaterialCardView mcv = new MaterialCardView(this);
-            LinearLayout ll = new LinearLayout(this);
-            TextView tv = new TextView(this);
-            RadioGroup rg = new RadioGroup(this);
-            RadioButton rb = new RadioButton(this);
-            RadioButton rb2 = new RadioButton(this);
-            RadioButton rb3 = new RadioButton(this);
-            CheckBox cb;
-            LinearLayout ll_editText = new LinearLayout(this);
 
-            mcv.setLayoutParams(mcv_dimensions);
-            mcv_dimensions.setMargins(px_16dp, px_16dp / 2, px_16dp, px_16dp);
-            mcv.setRadius(4);
-
-            ll.setLayoutParams(ll_dimensions);
-            ll.setOrientation(LinearLayout.VERTICAL);
-
-            tv.setLayoutParams(tv_dimensions);
-            tv_dimensions.setMargins(px_16dp, px_16dp, px_16dp, 0);
-            tv.setId(String.format("tv" + 2000 + i).hashCode());
-            // 设置题目的同时，判断是否要加上复选框
-            // 3.【地块基本情况】① 地块公告资料或数据地块公告资料或数据是否表述清楚，包含：□地块名称 □地块地址
-            cb_dimensions.setMargins(px_20dp, 0, px_20dp, 0);
-            ArrayList<CheckBox> list = null;
-            if (contentList.get(i + 8).contains("□")) {
-                String[] split = contentList.get(i + 8).split("□");
-                tv.setText(split[0]);
-//                TextViewCompat.setAutoSizeTextTypeWithDefaults(tv, TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM);
-                ll.addView(tv);
-                if (split.length > 1)
-                    list = new ArrayList<CheckBox>();
-                for (int j = 1; j < split.length; j++) {
-                    cb = new CheckBox(this);
-                    cb.setLayoutParams(cb_dimensions);
-                    cb.setText(split[j]);
-                    cb.setTextSize(16);
-                    cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-                        }
-                    });
-                    list.add(cb);
-                    ll.addView(cb);
-                }
-                checkboxList[i] = list;
-            } else {
-                tv.setText(contentList.get(i + 8));
-//                tv.setTextSize(18);
-                ll.addView(tv);
-            }
-
-            rg.setLayoutParams(rg_dimensions);
-            rg.setOrientation(LinearLayout.HORIZONTAL);
-
-            rb.setLayoutParams(rb_dimensions);
-            rb2.setLayoutParams(rb_dimensions);
-            rb3.setLayoutParams(rb_dimensions);
-            rb_dimensions.setMargins(0, px_16dp / 2, 0, px_16dp / 2);
-            rb.setText("符合");
-            rb2.setText("部分符合");
-            rb3.setText("不符合");
-            rb_dimensions.weight = 1;
-            rb.setTextSize(16);
-            rb2.setTextSize(16);
-            rb3.setTextSize(16);
-            rg.addView(rb);
-            rg.addView(rb2);
-            rg.addView(rb3);
-
-            int finalI = i;
-            rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(RadioGroup group, int checkedId) {
-                    choose[finalI + 8] = true;
-                    mVibrator.vibrate(30);
-                    System.out.println("checkedId % 142 +++++ " + checkedId % 142);
-
-                    int id = checkedId % 142 - 17;
-                    switch (id % 3) {
-                        case 0:
-                            scoreList[id] = 1;
-                            scoreList[id + 1] = 0;
-                            scoreList[id + 2] = 0;
-                            break;
-//                            rejectedFlag = Constant.REJECTED;
-                        case 1:
-                            scoreList[id] = 1;
-                            scoreList[id - 1] = 0;
-                            scoreList[id + 1] = 0;
-                            break;
-                        case 2:
-                            scoreList[id] = 1;
-                            scoreList[id - 1] = 0;
-                            scoreList[id - 2] = 0;
-                            break;
-                    }
-
-                    if (checkedId % 142 % 3 == 0 || checkedId % 142 % 3 == 1) {
-                        // 部分符合或者不符合，需要显示审查说明
-                        if (ll_editText.getChildCount() != 0) {
-                            ll_editText.setVisibility(View.VISIBLE);
-                            return;
-                        }
-                        ll_editText.setLayoutParams(ll_dimensions);
-                        ll_editText.setOrientation(LinearLayout.VERTICAL);
-                        ll_editText.setId(100000 + NO);
-
-                        TextView textView = new TextView(ReviewForm31Activity.this);
-                        EditText et = new EditText(ReviewForm31Activity.this);
-                        textView.setLayoutParams(tv_dimensions);
-                        textView.setText("请输入审查说明");
-                        et.setLayoutParams(et_dimensions);
-                        et.addTextChangedListener(new TextWatcher() {
-                            @Override
-                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                            }
-
-                            @Override
-                            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                            }
-
-                            @Override
-                            public void afterTextChanged(Editable s) {
-                                System.out.println("s = " + s);
-                                updateViewTop(finalI);
-                            }
-                        });
-                        et_dimensions.setMargins(px_16dp, px_16dp / 2, px_20dp, px_16dp / 2);
-                        ll_editText.addView(textView);
-                        ll_editText.addView(et);
-                        ll_editText.setVisibility(View.VISIBLE);
-                        reviewNotes[finalI] = et;
-                        ll.addView(ll_editText);
-                    } else {
-                        //符合
-                        if (ll_editText.getVisibility() == View.VISIBLE)
-//                        if (ll_editText != null)
-//                            findViewById(100000 + NO).setVisibility(View.GONE);
-                            ll_editText.setVisibility(View.GONE);
-                    }
-
-                    // 更新mcv的top
-                    updateViewTop(finalI);
-//
-//                    allMaterialCardView[finalI].measure(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-//                    int mheight =  allMaterialCardView[finalI].getMeasuredHeight();
-//                    System.out.println("w = " + mheight);
-//                    int height =  allMaterialCardView[finalI].getHeight();
-//                    System.out.println("w = " + height);
-
-                }
-            });
-
-            ll.addView(rg);
-            mcv.addView(ll);
-            allMaterialCardView[8 + i] = mcv;
-            linearLayout.addView(mcv, i + 11);
-        }
-        */
     }
 
     public void updateViewTop(int finalI) {
@@ -704,5 +787,73 @@ public class ReviewForm32Activity extends AppCompatActivity {
                 t.printStackTrace();
             }
         });
+    }
+
+    /**
+     * 关闭软键盘
+     */
+    private void closeSoftKeyInput() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        //boolean isOpen=imm.isActive();//isOpen若返回true，则表示输入法打开
+        if (imm != null && imm.isActive() && getCurrentFocus() != null) {
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                    InputMethodManager.HIDE_NOT_ALWAYS);
+            //imm.hideSoftInputFromInputMethod();//据说无效
+            //imm.hideSoftInputFromWindow(et_content.getWindowToken(), 0); //强制隐藏键盘
+            //如果输入法在窗口上已经显示，则隐藏，反之则显示
+            //imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    }
+
+    /**
+     * 这里采用系统自带方法，可替换为你更方便的自定义文件选择器
+     */
+    public void openDirChooseFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/jpeg");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);//多选
+        String relativePath = "DCIM%2fCamera";
+        Uri uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:" + relativePath);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
+        System.out.println("进来了！！");
+        startActivityForResult(intent, RESULT_CHOOSE);
+    }
+
+    /**
+     * 这里采用系统自带相机
+     */
+    public void takePhoto(int finalI) {
+        Intent openCameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        imageUri = Utils.getOutputMediaFileUri(ReviewForm32Activity.this, finalI);
+        System.out.println("imageUri = " + imageUri);
+        openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+        //Android7.0添加临时权限标记，此步千万别忘了
+        openCameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//                                startActivityForResult(openCameraIntent, CAMERA_RESULT);
+        startActivityForResult(openCameraIntent, RESULT_CAMERA);
+    }
+
+    private void getReviewNotes() {
+        for (int i = 0; i < 18; i++) {
+            if (richEditors[i] != null) {
+                // 文字
+                String originHTML = richEditors[i].getHtml();
+                if (originHTML != null) {
+                    System.out.println("originHTML = " + originHTML);
+                    String replaceHTML = Utils.replaceHTML(originHTML);
+                    reviewNoteStr[i] = replaceHTML;
+                }
+                // 图片
+                List<String> allSrcAndHref = richEditors[i].getAllSrcAndHref();
+                imgList.add(i, allSrcAndHref);
+            } else {
+                imgList.add(i, null);
+            }
+        }
+        for (int j = 0; j < 18; j++) {
+            System.out.println("reviewNoteStr[" + j + "] " + reviewNoteStr[j]);
+        }
     }
 }
