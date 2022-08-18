@@ -32,6 +32,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -57,10 +58,13 @@ import org.androidannotations.annotations.NonConfigurationInstance;
 import org.androidannotations.annotations.ViewById;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import retrofit2.Call;
@@ -105,6 +109,10 @@ public class ReviewForm31Activity extends AppCompatActivity {
     LinearLayout bottomView;
     @ViewById(R.id.swipeRefresh31)
     SwipeRefreshLayout swipeRefreshLayout;
+    @ViewById(R.id.name)
+    EditText nameTextView;
+    @ViewById(R.id.ll_name)
+    LinearLayout ll_name;
     RichEditorNew currentRichEditor;
 
     @NonConfigurationInstance
@@ -112,7 +120,7 @@ public class ReviewForm31Activity extends AppCompatActivity {
 
     private boolean rejectedFlag;
     private Integer[] checkList = new Integer[24]; // 否决项结果
-//    private Integer[] scoreList = new Integer[126]; // 打分项结果
+    //    private Integer[] scoreList = new Integer[126]; // 打分项结果
     private EditText[] reviewNotes = new EditText[12];
     private String[] reviewNoteStr = new String[12];
     //    private ArrayList<CheckBox> checkboxList[] = new ArrayList[42]; // checkbox结果列表
@@ -179,38 +187,70 @@ public class ReviewForm31Activity extends AppCompatActivity {
                 }
             });
         }
+
+        nameTextView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                ll_name.setBackground(null);
+            }
+        });
     }
 
     int tops = 0;
+
     @Click({R.id.bt_preview31, R.id.bt_preview31_1})
     void ButtonPreviewWasClicked() {
-        System.out.println("click!");
+//        System.out.println("click!");
 //        int top = allLinearLayout[7].getTop();
-        for (int i = 0; i < 12; i++) {
-            if (choose[i] == false) {
-                System.out.println("top" + i + " = " + top[i]);
-                scrollView.smoothScrollTo(0, top[i] - bottomView.getHeight() - 20);
+        if (nameTextView.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入项目名称 :)", Toast.LENGTH_SHORT).show();
+            ll_name.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else {
+            for (int i = 0; i < 12; i++) {
+                if (choose[i] == false) {
+                    System.out.println("top" + i + " = " + top[i]);
+                    scrollView.smoothScrollTo(0, top[i] - bottomView.getHeight() - 20);
 
-                allMaterialCardView[i].getChildAt(0).setBackground(getResources().getDrawable(R.drawable.focus_error));
-                return;
+                    allMaterialCardView[i].getChildAt(0).setBackground(getResources().getDrawable(R.drawable.focus_error));
+                    return;
+                }
             }
         }
-        ButtonPdfWasClicked();
+//        ButtonPdfWasClicked();
     }
 
     @Click({R.id.bt_pdf31, R.id.bt_pdf31_1})
     void ButtonPdfWasClicked() {
         System.out.println("bt_pdf");
-        try {
-            dir = Environment.getExternalStorageDirectory().getCanonicalPath();
-            String fileName = getResources().getString(R.string.check_form_31_title);
-            filePath = "/Download/" + fileName + ".pdf";
-            System.out.println("dir =" + dir); // str=/storage/emulated/0
+        if (nameTextView.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0,  0);
+            Toast.makeText(this, "请输入项目名称 :)", Toast.LENGTH_SHORT).show();
+            ll_name.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else {
+            try {
+                dir = Environment.getExternalStorageDirectory().getCanonicalPath();
+                Date date = new Date();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
+                filePath = "/Download/" + nameTextView.getText().toString().trim() + "_" +
+                        getResources().getString(R.string.check_form_31_title) + "_" + sdf.format(date) + ".pdf";
+                System.out.println("dir =" + dir); // str=/storage/emulated/0
 
-            progressBar.setVisibility(View.VISIBLE);
-            createPdf();
-        } catch (Exception e) {
-            e.printStackTrace();
+                progressBar.setVisibility(View.VISIBLE);
+                createPdf(nameTextView.getText().toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -226,7 +266,7 @@ public class ReviewForm31Activity extends AppCompatActivity {
         switch (requestCode) {
             case RESULT_CAMERA:
                 System.out.println("uri = " + imageUri.getPath());
-                if (imageUri != null) {
+                if (resultCode == RESULT_OK) {
 //                    String abUrl = FilesUtils.getPath(ReviewForm34Activity.this, imageUri);
                     String abUrl = imageUri.getPath();
                     abUrl = abUrl.substring(5);
@@ -236,6 +276,15 @@ public class ReviewForm31Activity extends AppCompatActivity {
                         currentRichEditor.insertImage(essFile.getAbsolutePath());
                         currentRichEditor.setFontSize(4);
                         currentRichEditor.setEditorFontSize(18);
+                    }
+                } else if (resultCode == RESULT_CANCELED) {
+                    File fdelete = new File(imageUri.getPath().substring(5));
+                    if (fdelete.exists()) {
+                        if (fdelete.delete()) {
+                            System.out.println("file Deleted :" + imageUri.getPath());
+                        } else {
+                            System.out.println("file not Deleted :" + imageUri.getPath());
+                        }
                     }
                 }
                 break;
@@ -292,10 +341,10 @@ public class ReviewForm31Activity extends AppCompatActivity {
     }
 
     @Background
-    void createPdf() {
+    void createPdf(String name) {
         try {
             getReviewNotes();
-            new AddingTable31(this, checkList, rejectedFlag, reviewNoteStr, imgList).manipulatePdf(dir + filePath);
+            new AddingTable31(this, checkList, rejectedFlag, reviewNoteStr, imgList, name).manipulatePdf(dir + filePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -443,7 +492,7 @@ public class ReviewForm31Activity extends AppCompatActivity {
                         spannableString.setSpan(sizeSpan, 0, split[0].length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     }
                     if (p == 1)
-                        spannableString.setSpan(span,0, split[0].length() + 1 + split[1].length(),Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        spannableString.setSpan(span, 0, split[0].length() + 1 + split[1].length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }
 
@@ -479,13 +528,13 @@ public class ReviewForm31Activity extends AppCompatActivity {
                     System.out.println("position = " + position);
 
                     int n = 2; // 单选组个数
-                    baseNo = (checkedId + (n-1)) - (finalI + 1) * n - position;
+                    baseNo = (checkedId + (n - 1)) - (finalI + 1) * n - position;
 
                     choose[finalI] = true;
                     mVibrator.vibrate(30);
                     System.out.println("当前累计 checkedId +++++ " + checkedId);
                     System.out.println("baseNo ++++" + baseNo);
-                    if(baseNo == -1)
+                    if (baseNo == -1)
                         System.out.println("出问题了。");
                     int id = (checkedId - 1) - baseNo;
                     System.out.println(id);
@@ -710,7 +759,7 @@ public class ReviewForm31Activity extends AppCompatActivity {
             ll.addView(rg);
             mcv.addView(ll);
             allMaterialCardView[i] = mcv;
-            linearLayout.addView(mcv, i + 1);
+            linearLayout.addView(mcv, i + 2);
         }
 
     }
@@ -788,6 +837,7 @@ public class ReviewForm31Activity extends AppCompatActivity {
             }
         });
     }
+
     /**
      * 关闭软键盘
      */
@@ -815,7 +865,6 @@ public class ReviewForm31Activity extends AppCompatActivity {
         String relativePath = "DCIM%2fCamera";
         Uri uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:" + relativePath);
         intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
-        System.out.println("进来了！！");
         startActivityForResult(intent, RESULT_CHOOSE);
     }
 

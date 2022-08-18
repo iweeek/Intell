@@ -35,7 +35,9 @@ import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -44,6 +46,7 @@ import static com.itextpdf.forms.fields.PdfFormField.VISIBLE;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.EditText;
 
@@ -68,14 +71,17 @@ public class AddingTable34 {
     private int seriousIssueCount = 0;
     private int otherIssueCount = 0;
     ArrayList<List<String>> imgList = new ArrayList<>(20);
+    private String name;
+    private boolean hasAttachment = false;
 
 
-    public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList) {
+    public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList, String name) {
         this.context = context;
         this.checkList = checkList;
         this.rejectedFlag = rejectedFlag;
         this.reviewNoteStr = reviewNoteStr;
         this.imgList = imgList;
+        this.name = name;
     }
 
     public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes, ArrayList<List<String>> imgList) {
@@ -119,11 +125,13 @@ public class AddingTable34 {
         table.setWidth(UnitValue.createPercentValue(100));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("地块名称", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell(1, 2).add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        table.addCell(new Cell(1, 2).add(generateParagraphWithBold(name, 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("所在省市", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("调查时间", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+        table.addCell(new Cell().add(generateParagraphWithBold(sdf.format(date), 10.5f, TextAlignment.CENTER, 2f)));
 
 //        table.addCell(new Cell().add(generateParagraphWithBold("检验检测机构名称", 10.5f, TextAlignment.CENTER, 2f)));
 //        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
@@ -140,7 +148,7 @@ public class AddingTable34 {
         table.addCell(new Cell().add(generateParagraphWithBold("检验检测\n机构名称", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraphWithBold("检查日期", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+        table.addCell(new Cell().add(generateParagraphWithBold(sdf.format(date), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
 
         table.addCell(new Cell().add(generateParagraphWithBold("序号", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("检查环节", 10.5f, TextAlignment.CENTER, 2f)));
@@ -275,6 +283,7 @@ public class AddingTable34 {
                                 s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "");
                             else
                                 s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "\n");
+                            hasAttachment = true;
                         } else {
                             break;
                         }
@@ -313,31 +322,33 @@ public class AddingTable34 {
 
         document.add(generateParagraph("注：（1）带*号项为重点检查项，3个（含）以上带*号的检查项目判定为否，或累计6项（含）以上检查项目判定为否或材料不支撑判断，则认为调查报告存在严重质量问题；所有检查项目判定为是，则认为暂未发现问题；其他情况为一般质量问题。\n（2）检查要点基于国家发布的相关技术导则设定。\n（3）第三阶段土壤污染状况调查检查要点同第二阶段土壤污染状况调查-详细采样分析。\n（4）对不同调查环节，不涉及的检查要点不判定检查结果；检查要点中不涉及的内容不作为检查结果的判定依据。", 10.5f, TextAlignment.LEFT));
 
-        pdfDoc.setDefaultPageSize(PageSize.A4);
-        // Adding an empty page
-        pdfDoc.addNewPage();
-        document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        if (hasAttachment) {
+            pdfDoc.setDefaultPageSize(PageSize.A4);
+            // Adding an empty page
+            pdfDoc.addNewPage();
+            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 
-        Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
-        paragraph.setPageNumber(7);
-        document.add(paragraph);
+            Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
+            paragraph.setPageNumber(7);
+            document.add(paragraph);
 
-        System.out.println("imgList = " + imgList.size());
-        for (int i = 0; i < 20; i++) {
-            List<String> stringList = imgList.get(i);
-            if (stringList != null) {
-                for (int j = 0; j < stringList.size(); j++) {
-                    document.add(generateParagraph("图" + (i+1) + "-" + (j+1) + "\n", 10.5f, TextAlignment.LEFT));
+            System.out.println("imgList = " + imgList.size());
+            for (int i = 0; i < 20; i++) {
+                List<String> stringList = imgList.get(i);
+                if (stringList != null) {
+                    for (int j = 0; j < stringList.size(); j++) {
+                        document.add(generateParagraph("图" + (i + 1) + "-" + (j + 1) + "\n", 10.5f, TextAlignment.LEFT));
 
-                    // 获得缩略图，大幅减小文件体积
-                    Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                    byte[] data = baos.toByteArray();
-                    Image image = new Image(ImageDataFactory.create(data));
-                    image.scaleToFit(700, 700);
-                    document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
+                        // 获得缩略图，大幅减小文件体积
+                        Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                        byte[] data = baos.toByteArray();
+                        Image image = new Image(ImageDataFactory.create(data));
+                        image.scaleToFit(700, 700);
+                        document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
 //                    document.add(new Image(ImageDataFactory.create(stringList.get(j))).setHeight(UnitValue.createPercentValue(50)));
+                    }
                 }
             }
         }

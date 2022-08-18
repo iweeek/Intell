@@ -1,7 +1,6 @@
 package com.example.intell.ui;
 
 
-import android.app.Activity;
 import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,13 +28,13 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -48,9 +47,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.intell.R;
 import com.example.intell.common.CommonUtil;
-import com.example.intell.common.ImageUtils;
 import com.example.intell.common.MyGlideEngine;
-import com.example.intell.common.SDCardUtil;
 import com.example.intell.entry.EnvironmentData;
 import com.example.intell.network.EnvironmentService;
 import com.example.intell.network.ServiceCreator;
@@ -60,7 +57,6 @@ import com.google.android.material.card.MaterialCardView;
 import com.rex.editor.common.EssFile;
 import com.rex.editor.common.FilesUtils;
 import com.rex.editor.view.RichEditorNew;
-import com.sendtion.xrichtext.RichTextEditor;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.internal.entity.CaptureStrategy;
@@ -78,17 +74,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import okhttp3.internal.Util;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -136,6 +126,10 @@ public class ReviewForm34Activity extends AppCompatActivity {
     LinearLayout bottomView;
     @ViewById(R.id.swipeRefresh31)
     SwipeRefreshLayout swipeRefreshLayout;
+    @ViewById(R.id.name)
+    EditText nameTextView;
+    @ViewById(R.id.ll_name)
+    LinearLayout ll_name;
     RichEditorNew currentRichEditor;
 
     @NonConfigurationInstance
@@ -224,8 +218,25 @@ public class ReviewForm34Activity extends AppCompatActivity {
             });
         }
 
+        nameTextView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                ll_name.setBackground(null);
+            }
+        });
+
         //////////////////////////////////////////////////////////////////////////////////////
-        outputImage = new File(getExternalCacheDir(), "output_image.jpg");
+//        outputImage = new File(getExternalCacheDir(), "output_image.jpg");
 //        File externalStorageDirectory = Environment.getExternalStorageDirectory();
 //        File dataDirectory = Environment.getDataDirectory();
 //        File downloadCacheDirectory = Environment.getDownloadCacheDirectory();
@@ -301,32 +312,46 @@ public class ReviewForm34Activity extends AppCompatActivity {
 
     @Click({R.id.bt_preview31, R.id.bt_preview31_1})
     void ButtonPreviewWasClicked() {
-        System.out.println("click!");
-//        int top = allLinearLayout[7].getTop();
-        for (int i = 0; i < 20; i++) {
-            if (choose[i] == false) {
-                System.out.println("top" + i + " = " + top[i]);
-                scrollView.smoothScrollTo(0, top[i] - bottomView.getHeight() - 20);
+//        System.out.println("click!");
+        if (nameTextView.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0,  0);
+            Toast.makeText(this, "请输入项目名称 :)", Toast.LENGTH_SHORT).show();
+            ll_name.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else {
+            for (int i = 0; i < 20; i++) {
+                if (choose[i] == false) {
+                    System.out.println("top" + i + " = " + top[i]);
+                    scrollView.smoothScrollTo(0, top[i] - bottomView.getHeight() - 20);
 
-                allMaterialCardView[i].getChildAt(0).setBackground(getResources().getDrawable(R.drawable.focus_error));
-                return;
+                    allMaterialCardView[i].getChildAt(0).setBackground(getResources().getDrawable(R.drawable.focus_error));
+                    return;
+                }
             }
         }
-        ButtonPdfWasClicked();
+//        ButtonPdfWasClicked();
     }
 
     @Click({R.id.bt_pdf31, R.id.bt_pdf31_1})
     void ButtonPdfWasClicked() {
         System.out.println("bt_pdf");
-        try {
-            dir = Environment.getExternalStorageDirectory().getCanonicalPath();
-            filePath = "/Download/" + getResources().getString(R.string.check_form_34_title) + ".pdf";
-            System.out.println("dir =" + dir); // str=/storage/emulated/0
+        if (nameTextView.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0,  0);
+            Toast.makeText(this, "请输入项目名称 :)", Toast.LENGTH_SHORT).show();
+            ll_name.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else {
+            try {
+                dir = Environment.getExternalStorageDirectory().getCanonicalPath();
+                Date date = new Date();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
+                filePath = "/Download/" + nameTextView.getText().toString().trim() + "_" +
+                        getResources().getString(R.string.check_form_34_title) + "_" + sdf.format(date) + ".pdf";
+                System.out.println("dir =" + dir); // str=/storage/emulated/0
 
-            progressBar.setVisibility(View.VISIBLE);
-            createPdf();
-        } catch (Exception e) {
-            e.printStackTrace();
+                progressBar.setVisibility(View.VISIBLE);
+                createPdf(nameTextView.getText().toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -440,16 +465,26 @@ public class ReviewForm34Activity extends AppCompatActivity {
                 break;
             case RESULT_CAMERA:
                 System.out.println("uri = " + imageUri.getPath());
-                if (imageUri != null) {
+                if (resultCode == RESULT_OK) {
 //                    String abUrl = FilesUtils.getPath(ReviewForm34Activity.this, imageUri);
                     String abUrl = imageUri.getPath();
-                    abUrl = abUrl.substring(5);
+                    abUrl = abUrl.substring(5); // 去除 /root
                     Log.i("rex", "abUrl:" + abUrl);
                     EssFile essFile = new EssFile(abUrl);
+                    System.out.println("essFile.getAbsolutePath() = " + essFile.getAbsolutePath());
                     if (essFile.isImage() || essFile.isGif()) {
                         currentRichEditor.insertImage(essFile.getAbsolutePath());
                         currentRichEditor.setFontSize(4);
                         currentRichEditor.setEditorFontSize(18);
+                    }
+                } else if (resultCode == RESULT_CANCELED) {
+                    File fdelete = new File(imageUri.getPath().substring(5));
+                    if (fdelete.exists()) {
+                        if (fdelete.delete()) {
+                            System.out.println("file Deleted :" + imageUri.getPath());
+                        } else {
+                            System.out.println("file not Deleted :" + imageUri.getPath());
+                        }
                     }
                 }
                 break;
@@ -506,10 +541,10 @@ public class ReviewForm34Activity extends AppCompatActivity {
     }
 
     @Background
-    void createPdf() {
+    void createPdf(String name) {
         try {
             getReviewNotes();
-            new AddingTable34(this, checkList, rejectedFlag, reviewNoteStr, imgList).manipulatePdf(dir + filePath);
+            new AddingTable34(this, checkList, rejectedFlag, reviewNoteStr, imgList, name).manipulatePdf(dir + filePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1013,7 +1048,7 @@ public class ReviewForm34Activity extends AppCompatActivity {
             ll.addView(rg);
             mcv.addView(ll);
             allMaterialCardView[i] = mcv;
-            linearLayout.addView(mcv, i + 2);
+            linearLayout.addView(mcv, i + 3);
         }
     }
 
@@ -1180,7 +1215,6 @@ public class ReviewForm34Activity extends AppCompatActivity {
         String relativePath = "DCIM%2fCamera";
         Uri uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:" + relativePath);
         intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
-        System.out.println("进来了！！");
         startActivityForResult(intent, RESULT_CHOOSE);
     }
 

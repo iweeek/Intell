@@ -73,13 +73,14 @@ public class HomeFragment extends Fragment {
 //        name.add("管理系统");
 //        name.add("任务");
 //        name.add("我的账号");
-        name.add(getResources().getString(R.string.environment_monitor));
+//        name.add(getResources().getString(R.string.environment_monitor));
         name.add(getResources().getString(R.string.review_form));
         name.add("采样方案检查表");
         name.add("现场采样检查表");
         name.add("检验检测检查表");
         name.add("审核记录表");
-        name.add("预览PDF");
+        name.add("PDF浏览");
+        name.add("PDF分享");
 //        for (int i = 0; i < 16; i++) {
 //            name.add("预览PDF");
 //        }
@@ -89,13 +90,14 @@ public class HomeFragment extends Fragment {
 //        images.add(Color.GRAY);
 //        images.add(Color.GREEN);
 //        images.add(Color.BLUE);
-        images.add(R.drawable.ic_weizhi);
+//        images.add(R.drawable.ic_weizhi);
         images.add(R.drawable.ic_ziliao);
         images.add(R.drawable.ic_xiaoxi);
         images.add(R.drawable.ic_sousuo);
         images.add(R.drawable.ic_biji);
         images.add(R.drawable.ic_huiyuan);
         images.add(R.drawable.ic_shoucang);
+        images.add(R.drawable.ic_weizhi);
 //        for (int i = 0; i < 16; i++) {
 //            images.add(Color.DKGRAY);
 //        }

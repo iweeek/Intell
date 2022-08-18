@@ -1,6 +1,15 @@
 package com.example.intell.tool;
 
 
+import static com.itextpdf.forms.fields.PdfFormField.TYPE_CHECK;
+import static com.itextpdf.forms.fields.PdfFormField.VISIBLE;
+
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.util.Log;
+import android.widget.CheckBox;
+import android.widget.EditText;
+
 import com.example.intell.R;
 import com.example.intell.ui.ReviewFormActivity;
 import com.itextpdf.forms.PdfAcroForm;
@@ -8,6 +17,7 @@ import com.itextpdf.forms.fields.PdfButtonFormField;
 import com.itextpdf.forms.fields.PdfFormField;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
@@ -18,7 +28,16 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.Style;
-import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.element.AreaBreak;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Tab;
+import com.itextpdf.layout.element.TabStop;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.properties.AreaBreakType;
+import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TabAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
@@ -27,22 +46,17 @@ import com.itextpdf.layout.renderer.CellRenderer;
 import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import static com.itextpdf.forms.fields.PdfFormField.*;
-
-import android.app.Activity;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
 
 public class AddingTable {
 
@@ -50,7 +64,7 @@ public class AddingTable {
 
     private static Color FONT_COLOR = new DeviceRgb(20, 20, 20);
     private static PdfFont pdfFontChinese;
-//    private static String FONT_FILE_CHINESE = "src/main/resources/font/simsun.ttc,0";
+    //    private static String FONT_FILE_CHINESE = "src/main/resources/font/simsun.ttc,0";
     private static String FONT_FILE_CHINESE = "res/raw/simsun.ttc,0";
     public static final String DEST = "./target/sandbox/acroforms/reporting/addingTable.pdf";
 
@@ -62,17 +76,35 @@ public class AddingTable {
     private Integer partialMatch = 0;
     private float totalScore = 0;
     private EditText[] reviewNotes = new EditText[42];
-    private String[] reviewNoteStr = new String[50];
+    private String[] reviewNoteStr = new String[42];
     private ArrayList<CheckBox> checkboxList[] = new ArrayList[42]; // checkbox结果列表
-    ArrayList<List<String>> imgList = new ArrayList<>(50);
+    ArrayList<List<String>> imgList = new ArrayList<>(42);
+    private String name;
+    private boolean hasAttachment = false;
 
-    public AddingTable() {}
+    public AddingTable() {
+    }
 
     public AddingTable(Activity context) {
         this.context = context;
     }
 
-    public AddingTable(Activity context, Integer[] rejectedList, boolean rejectedFlag, Integer[] scoreList, EditText[] reviewNotes, ArrayList<CheckBox>[] checkboxList) {
+    public AddingTable(Activity context, Integer[] rejectedList,
+                       boolean rejectedFlag, Integer[] scoreList, ArrayList<CheckBox>[] checkboxList,
+                       String[] reviewNoteStr, ArrayList<List<String>> imgList, String name) {
+        this.context = context;
+        this.rejectedList = rejectedList;
+        this.rejectedFlag = rejectedFlag;
+        this.scoreList = scoreList;
+        this.checkboxList = checkboxList;
+        this.reviewNoteStr = reviewNoteStr;
+        this.imgList = imgList;
+        this.name = name;
+    }
+
+    public AddingTable(Activity context, Integer[] rejectedList,
+                       boolean rejectedFlag, Integer[] scoreList,
+                       EditText[] reviewNotes, ArrayList<CheckBox>[] checkboxList) {
         this.context = context;
         this.rejectedList = rejectedList;
         this.rejectedFlag = rejectedFlag;
@@ -109,19 +141,18 @@ public class AddingTable {
         String title = context.getResources().getString(R.string.review_form_title);
         document.add(new Paragraph(title).setFontFamily().setFont(pdfFontChinese).setFontSize(16).setFontColor(FONT_COLOR).setTextAlignment(TextAlignment.CENTER));
 
-        String name = "项目名称: " + "桐乡市大麻镇2022-7地块土壤污染状况初步调查报告";
-        String company = "编制单位: 宁波市华测检测技术有限公司";
-//        String company = "编制单位: 宁波市华测检测技术有限公司";
-        String date = "评审时间: 2022.7.11";
+        String ProjectName = "项目名称: " + name;
+        String company = "编制单位: ";
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
         String serial = "第" + " 1 " + "次审查";
-        new Paragraph();
 //        document.add(generateParagraph("日期：", 12, TextAlignment.RIGHT).add(new Tab()).addTabStops(new TabStop(250, TabAlignment.LEFT)));
 
-        document.add(generateParagraph(name, 12, FONT_COLOR, TextAlignment.LEFT, 0.5f)
-                        .add(new Tab()).addTabStops(new TabStop(500, TabAlignment.LEFT))
-                        .add(generateParagraph(date, 12, FONT_COLOR, TextAlignment.LEFT, 0.5f))
-                        .add(new Tab()).addTabStops(new TabStop(700, TabAlignment.LEFT))
-                        .add(generateParagraph(serial, 12, FONT_COLOR, TextAlignment.LEFT, 0.5f)).setFixedLeading(0.5f).setMultipliedLeading(0.5f)
+        document.add(generateParagraph(ProjectName, 12, FONT_COLOR, TextAlignment.LEFT, 0.5f)
+                .add(new Tab()).addTabStops(new TabStop(500, TabAlignment.LEFT))
+                .add(generateParagraph("评审时间: " + sdf.format(date), 12, FONT_COLOR, TextAlignment.LEFT, 0.5f))
+                .add(new Tab()).addTabStops(new TabStop(700, TabAlignment.LEFT))
+                .add(generateParagraph(serial, 12, FONT_COLOR, TextAlignment.LEFT, 0.5f)).setFixedLeading(0.5f).setMultipliedLeading(0.5f)
         );
         document.add(generateParagraph(company, 12, FONT_COLOR, TextAlignment.LEFT, 0.5f));
 
@@ -147,9 +178,9 @@ public class AddingTable {
 //            cell.setNextRenderer(new CheckboxCellRenderer(cell, "cb" + i));
 //            table.addCell(cell);
 
-            if (rejectedList[2*i] != null && rejectedList[2*i] == 1) {
+            if (rejectedList[2 * i] != null && rejectedList[2 * i] == 1) {
                 table.addCell(new Cell().add(generateParagraph("√涉及  □不涉及", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-            } else if (rejectedList[2*i+1] != null && rejectedList[2*i+1] == 1){
+            } else if (rejectedList[2 * i + 1] != null && rejectedList[2 * i + 1] == 1) {
                 table.addCell(new Cell().add(generateParagraph("□涉及  √不涉及", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
             } else {
                 table.addCell(new Cell().add(generateParagraph("□涉及  √不涉及", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
@@ -178,7 +209,7 @@ public class AddingTable {
 //                    if (split.length > 1)
                     for (int m = 1; m < split.length; m++) {
                         result.append("\n");
-                        if (checkboxList[k].get(m-1).isChecked()) {
+                        if (checkboxList[k].get(m - 1).isChecked()) {
                             result.append("√");
                         } else {
                             result.append("□");
@@ -190,12 +221,12 @@ public class AddingTable {
                 }
                 table.addCell(new Cell().add(generateParagraph(result.toString(), 12f)));
 
-                if (scoreList[3*k] != null && scoreList[3*k] == 1) {
+                if (scoreList[3 * k] != null && scoreList[3 * k] == 1) {
                     table.addCell(new Cell().add(generateParagraph("√符合 □部分符合 □不符合", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-                } else if (scoreList[3*k+1] != null && scoreList[3*k+1] == 1) {
+                } else if (scoreList[3 * k + 1] != null && scoreList[3 * k + 1] == 1) {
                     table.addCell(new Cell().add(generateParagraph("□符合 √部分符合 □不符合", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                     partialMatch++;
-                } else if (scoreList[3*k+2] != null && scoreList[3*k+2] == 1){
+                } else if (scoreList[3 * k + 2] != null && scoreList[3 * k + 2] == 1) {
                     table.addCell(new Cell().add(generateParagraph("□符合 □部分符合 √不符合", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                     notMatch++;
                 } else {
@@ -203,21 +234,38 @@ public class AddingTable {
                     notMatch++;
                 }
 
-                if (reviewNotes[k] != null) {
-                    table.addCell(new Cell().add(generateParagraph(String.valueOf(reviewNotes[k].getText()), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+                if (reviewNoteStr[k] != null) {
+                    String s = reviewNoteStr[k];
+                    int index = 0;
+                    int count = 0;
+                    while (index < s.length()) {
+                        if (s.indexOf("<img>") != -1) {
+                            count++;
+                            if (s.indexOf("<img>", s.indexOf("<img>") + 1) != -1)
+                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k + 1) + "-" + count + "");
+                            else
+                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k + 1) + "-" + count + "\n");
+                            hasAttachment = true;
+                        } else {
+                            break;
+                        }
+                    }
+                    System.out.println("sss = " + s);
+                    table.addCell(new Cell().add(generateParagraph(s, 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                 } else {
                     table.addCell(new Cell().add(generateParagraph("/", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
                 }
+
             }
         }
 
         // 总得分
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("总得分", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        totalScore = ((float) (100 * (42 - 1*notMatch - 0.5*partialMatch) / 42));
+        totalScore = ((float) (100 * (42 - 1 * notMatch - 0.5 * partialMatch) / 42));
         int scale = 2;//设置位数
         int roundingMode = 4;//表示四舍五入，可以选择其他舍值方式，例如去尾，等等.
-        BigDecimal bd = new BigDecimal((double)totalScore);
-        bd = bd.setScale(scale,roundingMode);
+        BigDecimal bd = new BigDecimal((double) totalScore);
+        bd = bd.setScale(scale, roundingMode);
         totalScore = bd.floatValue();
         table.addCell(new Cell().add(generateParagraphWithBold("_" + totalScore + "_分", 10.5f, TextAlignment.LEFT)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraphWithBold("总分计算方法：总得分 = 100×(42-1×不符合项目数-0.5×部分符合项目数)/42", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
@@ -238,6 +286,37 @@ public class AddingTable {
         document.add(generateParagraph("*若属于第一阶段调查报告的，可不对土壤/地下水调查布点取样等内容进行审查。", 12, TextAlignment.LEFT));
         document.add(generateParagraph("评审专家签名：", 12, TextAlignment.RIGHT).add(new Tab()).addTabStops(new TabStop(250, TabAlignment.LEFT)));
         document.add(generateParagraph("日期：", 12, TextAlignment.RIGHT).add(new Tab()).addTabStops(new TabStop(250, TabAlignment.LEFT)));
+
+        if (hasAttachment) {
+            pdfDoc.setDefaultPageSize(PageSize.A4);
+            // Adding an empty page
+            pdfDoc.addNewPage();
+            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+
+            Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
+            paragraph.setPageNumber(7);
+            document.add(paragraph);
+
+            System.out.println("imgList = " + imgList.size());
+            for (int i = 0; i < 42; i++) {
+                List<String> stringList = imgList.get(i);
+                if (stringList != null) {
+                    for (int j = 0; j < stringList.size(); j++) {
+                        document.add(generateParagraph("图" + (i + 1) + "-" + (j + 1) + "\n", 10.5f, TextAlignment.LEFT));
+
+                        // 获得缩略图，大幅减小文件体积
+                        Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                        byte[] data = baos.toByteArray();
+                        Image image = new Image(ImageDataFactory.create(data));
+                        image.scaleToFit(700, 700);
+                        document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
+//                    document.add(new Image(ImageDataFactory.create(stringList.get(j))).setHeight(UnitValue.createPercentValue(50)));
+                    }
+                }
+            }
+        }
 
         document.close();
         System.out.println("Paragraph added");

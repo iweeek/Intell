@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+<!--    <item-->
+<!--        android:id="@+id/action_favorite"-->
+<!--        app:showAsAction="ifRoom"-->
+<!--        android:icon="@drawable/ic_favorite_black_48dp"-->
+<!--        android:title="@string/action_favorite" />-->
+
+    <!-- Settings, should always be in the overflow -->
+<!--    <item-->
+<!--        android:id="@+id/action_settings"-->
+<!--        app:showAsAction="never"-->
+<!--        android:icon="@drawable/ic_baseline_share_24"-->
+<!--        android:title="分享" />-->
+
+    <item android:id="@+id/action_settings"
+        android:title="设置"
+        android:icon="@drawable/ic_baseline_more_vert_24"
+        app:showAsAction="ifRoom">
+        <!-- item包含menu表示该menu是item下的子菜单 -->
+        <menu>
+            <!-- 将group中的菜单项放于一个组里面 -->
+            <group>
+                <item android:id="@+id/action_other_pdf"
+                    android:title="选择其他PDF浏览"
+                    android:icon="@drawable/ic_order"
+                    app:showAsAction="ifRoom"
+                    />
+                <item android:id="@+id/action_share"
+                    android:title="分享"
+                    android:icon="@drawable/ic_baseline_share_24"
+                    app:showAsAction="ifRoom"
+                    />
+            </group>
+        </menu>
+    </item>
+
+</menu>

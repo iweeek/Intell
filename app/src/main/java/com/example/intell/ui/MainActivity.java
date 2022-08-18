@@ -17,6 +17,7 @@ import android.widget.Toast;
 import com.example.intell.R;
 import com.example.intell.entry.AccessToken;
 import com.example.intell.network.TokenService;
+import com.example.intell.tool.Utils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import retrofit2.Call;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
 
         getTokenBySharedPreferences();
+        Utils.requestPermission(MainActivity.this);
 
     }
 

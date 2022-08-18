@@ -1,6 +1,14 @@
 package com.example.intell.tool;
 
 
+import static com.itextpdf.forms.fields.PdfFormField.TYPE_CHECK;
+import static com.itextpdf.forms.fields.PdfFormField.VISIBLE;
+
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.util.Log;
+import android.widget.EditText;
+
 import com.example.intell.R;
 import com.example.intell.ui.ReviewForm33Activity;
 import com.itextpdf.forms.PdfAcroForm;
@@ -34,18 +42,17 @@ import com.itextpdf.layout.renderer.CellRenderer;
 import com.itextpdf.layout.renderer.DrawContext;
 import com.itextpdf.layout.renderer.IRenderer;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import static com.itextpdf.forms.fields.PdfFormField.TYPE_CHECK;
-import static com.itextpdf.forms.fields.PdfFormField.VISIBLE;
-
-import android.app.Activity;
-import android.graphics.Bitmap;
-import android.util.Log;
-import android.widget.EditText;
 
 public class AddingTable33 {
 
@@ -66,6 +73,8 @@ public class AddingTable33 {
     private boolean seriousIssue = false;
     private boolean otherIssue = false;
     ArrayList<List<String>> imgList = new ArrayList<>(23);
+    private String name;
+    private boolean hasAttachment = false;
 
     public AddingTable33() {
     }
@@ -74,12 +83,13 @@ public class AddingTable33 {
         this.context = context;
     }
 
-    public AddingTable33(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList) {
+    public AddingTable33(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList, String name) {
         this.context = context;
         this.checkList = checkList;
         this.rejectedFlag = rejectedFlag;
         this.reviewNoteStr = reviewNoteStr;
         this.imgList = imgList;
+        this.name = name;
     }
 
     public AddingTable33(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes) {
@@ -122,14 +132,16 @@ public class AddingTable33 {
         table.setWidth(UnitValue.createPercentValue(100));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("地块名称", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell(1, 2).add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        table.addCell(new Cell(1, 2).add(generateParagraphWithBold(name, 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("检验检测机构名称", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("调查环节", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell(1, 2).add(generateParagraph("□初步采样分析   □详细采样分析   □第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
         table.addCell(new Cell().add(generateParagraphWithBold("检查日期", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        table.addCell(new Cell().add(generateParagraphWithBold(sdf.format(date), 10.5f, TextAlignment.CENTER, 2f)));
 
         table.addCell(new Cell().add(generateParagraphWithBold("序号", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("检查环节", 10.5f, TextAlignment.CENTER, 2f)));
@@ -237,6 +249,7 @@ public class AddingTable33 {
                                 s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "");
                             else
                                 s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "\n");
+                            hasAttachment = true;
                         } else {
                             break;
                         }
@@ -273,31 +286,33 @@ public class AddingTable33 {
 
         document.add(generateParagraph("注：不涉及的检查要点不判定检查结果。", 10.5f, TextAlignment.LEFT));
 
-        pdfDoc.setDefaultPageSize(PageSize.A4);
-        // Adding an empty page
-        pdfDoc.addNewPage();
-        document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        if (hasAttachment) {
+            pdfDoc.setDefaultPageSize(PageSize.A4);
+            // Adding an empty page
+            pdfDoc.addNewPage();
+            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 
-        Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
-        paragraph.setPageNumber(7);
-        document.add(paragraph);
+            Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
+            paragraph.setPageNumber(7);
+            document.add(paragraph);
 
-        System.out.println("imgList = " + imgList.size());
-        for (int i = 0; i < 23; i++) {
-            List<String> stringList = imgList.get(i);
-            if (stringList != null) {
-                for (int j = 0; j < stringList.size(); j++) {
-                    document.add(generateParagraph("图" + (i+1) + "-" + (j+1) + "\n", 10.5f, TextAlignment.LEFT));
+            System.out.println("imgList = " + imgList.size());
+            for (int i = 0; i < 23; i++) {
+                List<String> stringList = imgList.get(i);
+                if (stringList != null) {
+                    for (int j = 0; j < stringList.size(); j++) {
+                        document.add(generateParagraph("图" + (i + 1) + "-" + (j + 1) + "\n", 10.5f, TextAlignment.LEFT));
 
-                    // 获得缩略图，大幅减小文件体积
-                    Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                    byte[] data = baos.toByteArray();
-                    Image image = new Image(ImageDataFactory.create(data));
-                    image.scaleToFit(700, 700);
-                    document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
+                        // 获得缩略图，大幅减小文件体积
+                        Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                        byte[] data = baos.toByteArray();
+                        Image image = new Image(ImageDataFactory.create(data));
+                        image.scaleToFit(700, 700);
+                        document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
 //                    document.add(new Image(ImageDataFactory.create(stringList.get(j))).setHeight(UnitValue.createPercentValue(50)));
+                    }
                 }
             }
         }

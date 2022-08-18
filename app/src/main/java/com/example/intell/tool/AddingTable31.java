@@ -48,7 +48,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -70,6 +72,8 @@ public class AddingTable31 {
     private EditText[] reviewNotes = new EditText[12];
     private String[] reviewNoteStr = new String[12];
     ArrayList<List<String>> imgList = new ArrayList<>(12);
+    private String name;
+    private boolean hasAttachment = false;
 
 
     public AddingTable31() {}
@@ -78,12 +82,13 @@ public class AddingTable31 {
         this.context = context;
     }
 
-    public AddingTable31(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList) {
+    public AddingTable31(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList, String name) {
         this.context = context;
         this.checkList = checkList;
         this.rejectedFlag = rejectedFlag;
         this.reviewNoteStr = reviewNoteStr;
         this.imgList = imgList;
+        this.name = name;
     }
 
     public AddingTable31(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes) {
@@ -126,14 +131,16 @@ public class AddingTable31 {
         table.setWidth(UnitValue.createPercentValue(100));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("地块名称", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell(1, 2).add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        table.addCell(new Cell(1, 2).add(generateParagraphWithBold(name, 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("编制单位名称", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("调查环节", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell(1, 2).add(generateParagraph("□初步采样分析   □详细采样分析   □第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
         table.addCell(new Cell().add(generateParagraphWithBold("检查日期", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        table.addCell(new Cell().add(generateParagraphWithBold(sdf.format(date), 10.5f, TextAlignment.CENTER, 2f)));
 
         table.addCell(new Cell().add(generateParagraphWithBold("序号", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("检查环节", 10.5f, TextAlignment.CENTER, 2f)));
@@ -225,6 +232,7 @@ public class AddingTable31 {
                                 s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "");
                             else
                                 s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "\n");
+                            hasAttachment = true;
                         } else {
                             break;
                         }
@@ -260,31 +268,33 @@ public class AddingTable31 {
 
         document.add(generateParagraph("注：（1）检查要点基于《建设用地土壤污染状况调查技术导则》（HJ 25.1—2019）、《建设用地土壤污染风险管控和修复监测技术导则》（HJ 25.2—2019）、《建设用地土壤环境调查评估技术指南》等相关技术导则设定。 \n （2）对不同调查环节，不涉及的检查要点不判定检查结果；检查要点中不涉及的内容不作为检查结果的判定依据。", 10.5f, TextAlignment.LEFT));
 
-        pdfDoc.setDefaultPageSize(PageSize.A4);
-        // Adding an empty page
-        pdfDoc.addNewPage();
-        document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        if (hasAttachment) {
+            pdfDoc.setDefaultPageSize(PageSize.A4);
+            // Adding an empty page
+            pdfDoc.addNewPage();
+            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 
-        Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
-        paragraph.setPageNumber(7);
-        document.add(paragraph);
+            Paragraph paragraph = generateParagraph("\n\n附件：\n", 16f, TextAlignment.LEFT);
+            paragraph.setPageNumber(7);
+            document.add(paragraph);
 
-        System.out.println("imgList = " + imgList.size());
-        for (int i = 0; i < 12; i++) {
-            List<String> stringList = imgList.get(i);
-            if (stringList != null) {
-                for (int j = 0; j < stringList.size(); j++) {
-                    document.add(generateParagraph("图" + (i+1) + "-" + (j+1) + "\n", 10.5f, TextAlignment.LEFT));
+            System.out.println("imgList = " + imgList.size());
+            for (int i = 0; i < 12; i++) {
+                List<String> stringList = imgList.get(i);
+                if (stringList != null) {
+                    for (int j = 0; j < stringList.size(); j++) {
+                        document.add(generateParagraph("图" + (i + 1) + "-" + (j + 1) + "\n", 10.5f, TextAlignment.LEFT));
 
-                    // 获得缩略图，大幅减小文件体积
-                    Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                    byte[] data = baos.toByteArray();
-                    Image image = new Image(ImageDataFactory.create(data));
-                    image.scaleToFit(700, 700);
-                    document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
+                        // 获得缩略图，大幅减小文件体积
+                        Bitmap bitmap = Utils.getBitmapFormUri(context, stringList.get(j));
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                        byte[] data = baos.toByteArray();
+                        Image image = new Image(ImageDataFactory.create(data));
+                        image.scaleToFit(700, 700);
+                        document.add(image.setWidth(UnitValue.createPercentValue(50)).setHorizontalAlignment(HorizontalAlignment.CENTER));
 //                    document.add(new Image(ImageDataFactory.create(stringList.get(j))).setHeight(UnitValue.createPercentValue(50)));
+                    }
                 }
             }
         }

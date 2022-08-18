@@ -21,14 +21,14 @@
         android:icon="@drawable/ic_workshop"
         android:contentDescription="@string/workshop"
         android:title="@string/workshop" />
-    <item
-        android:id="@+id/video"
-        android:icon="@drawable/ic_videocam"
-        android:contentDescription="@string/video"
-        android:title="@string/video" />
-    <item
-        android:id="@+id/user"
-        android:icon="@drawable/ic_person"
-        android:contentDescription="@string/user"
-        android:title="@string/user" />
+<!--    <item-->
+<!--        android:id="@+id/video"-->
+<!--        android:icon="@drawable/ic_videocam"-->
+<!--        android:contentDescription="@string/video"-->
+<!--        android:title="@string/video" />-->
+<!--    <item-->
+<!--        android:id="@+id/user"-->
+<!--        android:icon="@drawable/ic_person"-->
+<!--        android:contentDescription="@string/user"-->
+<!--        android:title="@string/user" />-->
 </menu>

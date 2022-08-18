@@ -1,7 +1,5 @@
 package com.example.intell.tool;
 
-import static android.content.Context.INPUT_METHOD_SERVICE;
-
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
