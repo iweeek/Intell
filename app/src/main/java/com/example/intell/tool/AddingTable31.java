@@ -73,25 +73,33 @@ public class AddingTable31 {
     private String[] reviewNoteStr = new String[12];
     ArrayList<List<String>> imgList = new ArrayList<>(12);
     private String name;
+    private String samplingUnitName;
+    private int surveyStep;
     private boolean hasAttachment = false;
 
 
-    public AddingTable31() {}
+    public AddingTable31() {
+    }
 
     public AddingTable31(Activity context) {
         this.context = context;
     }
 
-    public AddingTable31(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList, String name) {
+    public AddingTable31(Activity context, Integer[] checkList, boolean rejectedFlag,
+                         String[] reviewNoteStr, ArrayList<List<String>> imgList, String name,
+                         String samplingUnitName, int surveyStep) {
         this.context = context;
         this.checkList = checkList;
         this.rejectedFlag = rejectedFlag;
         this.reviewNoteStr = reviewNoteStr;
         this.imgList = imgList;
         this.name = name;
+        this.samplingUnitName = samplingUnitName;
+        this.surveyStep = surveyStep;
     }
 
-    public AddingTable31(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes) {
+    public AddingTable31(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[]
+            reviewNotes) {
         this.context = context;
         this.checkList = checkList;
         this.rejectedFlag = rejectedFlag;
@@ -133,10 +141,20 @@ public class AddingTable31 {
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("地块名称", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold(name, 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("编制单位名称", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        table.addCell(new Cell().add(generateParagraphWithBold(samplingUnitName, 10.5f, TextAlignment.CENTER, 2f)));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("调查环节", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell(1, 2).add(generateParagraph("□初步采样分析   □详细采样分析   □第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+        switch (surveyStep) {
+            case 0:
+                table.addCell(new Cell(1, 2).add(generateParagraph("√初步采样分析   □详细采样分析   □第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+            case 1:
+                table.addCell(new Cell(1, 2).add(generateParagraph("□初步采样分析   √详细采样分析   □第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+            case 2:
+                table.addCell(new Cell(1, 2).add(generateParagraph("□初步采样分析   □详细采样分析   √第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+        }
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
         table.addCell(new Cell().add(generateParagraphWithBold("检查日期", 10.5f, TextAlignment.CENTER, 2f)));
@@ -174,7 +192,7 @@ public class AddingTable31 {
                 Paragraph p1 = generateParagraphWithBold(split[0] + "。", 10.5f, TextAlignment.LEFT);
                 // 处理要点说明这一段
 //                Paragraph p2 = new Paragraph();
-                String rest = contentList.get(k).substring(split[0].length()+1);
+                String rest = contentList.get(k).substring(split[0].length() + 1);
 //                System.out.println(rest);
 //                Text t1 = new Text(rest.substring(0, 4)).setBold();
 //                Text t2 = new Text(rest.substring(4));
@@ -196,7 +214,7 @@ public class AddingTable31 {
                 rest = rest.substring(5);
                 String regex = "[\u4E00-\u9FA5|\\、|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】|\\□" +
                         "|\\①|\\②|\\③|\\④|\\⑤|\\⑥|\\⑦|\\⑧|\\⑨|\\⑩|\\⑪|\\/|\\ |\\(|\\)|\\√|\\＞|\\>|\\<|\\≤|\\≥]";
-                String copy = contentList.get(k).substring(split[0].length()+1).replaceAll(regex, "*");
+                String copy = contentList.get(k).substring(split[0].length() + 1).replaceAll(regex, "*");
                 StringTokenizer st = new StringTokenizer(copy, "*");
                 while (st.hasMoreElements()) {
                     String element = (String) st.nextElement();
@@ -229,9 +247,9 @@ public class AddingTable31 {
                         if (s.indexOf("<img>") != -1) {
                             count++;
                             if (s.indexOf("<img>", s.indexOf("<img>") + 1) != -1)
-                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "");
+                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k + 1) + "-" + count + "");
                             else
-                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k+1) + "-" + count + "\n");
+                                s = s.replaceFirst("<img>", " \n原图请见附件图" + (k + 1) + "-" + count + "\n");
                             hasAttachment = true;
                         } else {
                             break;
@@ -338,19 +356,23 @@ public class AddingTable31 {
         return p;
     }
 
-    private static Paragraph generateParagraph(String str, float size, TextAlignment textAlignment) {
+    private static Paragraph generateParagraph(String str, float size, TextAlignment
+            textAlignment) {
         return generateParagraph(str, size).setTextAlignment(textAlignment);
     }
 
-    private static Paragraph generateParagraph(String str, float size, TextAlignment textAlignment, float multipliedLeading) {
+    private static Paragraph generateParagraph(String str, float size, TextAlignment
+            textAlignment, float multipliedLeading) {
         return generateParagraph(str, size).setMultipliedLeading(multipliedLeading).setTextAlignment(textAlignment);
     }
 
-    private static Paragraph generateParagraphWithBold(String str, float size, TextAlignment textAlignment) {
+    private static Paragraph generateParagraphWithBold(String str, float size, TextAlignment
+            textAlignment) {
         return generateParagraph(str, size).setTextAlignment(textAlignment).setBold();
     }
 
-    private static Paragraph generateParagraphWithBold(String str, float size, TextAlignment textAlignment, float multipliedLeading) {
+    private static Paragraph generateParagraphWithBold(String str, float size, TextAlignment
+            textAlignment, float multipliedLeading) {
         return generateParagraph(str, size).setMultipliedLeading(multipliedLeading).setTextAlignment(textAlignment).setBold();
     }
 

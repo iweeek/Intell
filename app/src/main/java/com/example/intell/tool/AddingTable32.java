@@ -67,6 +67,8 @@ public class AddingTable32 {
     private String[] reviewNoteStr = new String[18];
     ArrayList<List<String>> imgList = new ArrayList<>(18);
     private String name;
+    private String samplingUnitName;
+    private int surveyStep;
     private boolean hasAttachment = false;
 
     public AddingTable32() {}
@@ -75,13 +77,17 @@ public class AddingTable32 {
         this.context = context;
     }
 
-    public AddingTable32(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList, String name) {
+    public AddingTable32(Activity context, Integer[] checkList, boolean rejectedFlag,
+                         String[] reviewNoteStr, ArrayList<List<String>> imgList, String name,
+                            String samplingUnitName, int surveyStep) {
         this.context = context;
         this.checkList = checkList;
         this.rejectedFlag = rejectedFlag;
         this.reviewNoteStr = reviewNoteStr;
         this.imgList = imgList;
         this.name = name;
+        this.samplingUnitName = samplingUnitName;
+        this.surveyStep = surveyStep;
     }
 
     public AddingTable32(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes) {
@@ -126,10 +132,20 @@ public class AddingTable32 {
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("地块名称", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold(name, 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("采样单位名称", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        table.addCell(new Cell().add(generateParagraphWithBold(samplingUnitName, 10.5f, TextAlignment.CENTER, 2f)));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("调查环节", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell(1, 2).add(generateParagraph("□初步采样分析   □详细采样分析   □第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+        switch (surveyStep) {
+            case 0:
+                table.addCell(new Cell(1, 2).add(generateParagraph("√初步采样分析   □详细采样分析   □第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+            case 1:
+                table.addCell(new Cell(1, 2).add(generateParagraph("□初步采样分析   √详细采样分析   □第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+            case 2:
+                table.addCell(new Cell(1, 2).add(generateParagraph("□初步采样分析   □详细采样分析   √第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+        }
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
         table.addCell(new Cell().add(generateParagraphWithBold("检查日期", 10.5f, TextAlignment.CENTER, 2f)));

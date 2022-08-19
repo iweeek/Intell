@@ -24,6 +24,8 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -31,6 +33,7 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,6 +67,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -113,6 +117,13 @@ public class ReviewForm32Activity extends AppCompatActivity {
     EditText nameTextView;
     @ViewById(R.id.ll_name)
     LinearLayout ll_name;
+    @ViewById(R.id.spinner)
+    Spinner spinner;
+    @ViewById(R.id.name_sampling_unit)
+    EditText samplingUnitName;
+    @ViewById(R.id.ll_sampling_unit)
+    LinearLayout ll_sampling_unit;
+
     RichEditorNew currentRichEditor;
 
     @NonConfigurationInstance
@@ -130,6 +141,7 @@ public class ReviewForm32Activity extends AppCompatActivity {
     RichEditorNew[] richEditors = new RichEditorNew[18];
     ArrayList<List<String>> imgList = new ArrayList<>(18);
     private int baseNo = -1;
+    private int surveyStep;
 
     private Vibrator mVibrator;
     private Uri imageUri;
@@ -205,6 +217,23 @@ public class ReviewForm32Activity extends AppCompatActivity {
                 ll_name.setBackground(null);
             }
         });
+
+        samplingUnitName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                ll_sampling_unit.setBackground(null);
+            }
+        });
     }
 
     int tops = 0;
@@ -217,6 +246,10 @@ public class ReviewForm32Activity extends AppCompatActivity {
             scrollView.smoothScrollTo(0, 0);
             Toast.makeText(this, "请输入项目名称 :)", Toast.LENGTH_SHORT).show();
             ll_name.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (samplingUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入采样单位名称 :)", Toast.LENGTH_SHORT).show();
+            ll_sampling_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
         } else {
             for (int i = 0; i < 18; i++) {
                 if (choose[i] == false) {
@@ -238,6 +271,10 @@ public class ReviewForm32Activity extends AppCompatActivity {
             scrollView.smoothScrollTo(0, 0);
             Toast.makeText(this, "请输入项目名称 :)", Toast.LENGTH_SHORT).show();
             ll_name.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (samplingUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入采样单位名称 :)", Toast.LENGTH_SHORT).show();
+            ll_sampling_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
         } else {
             try {
                 dir = Environment.getExternalStorageDirectory().getCanonicalPath();
@@ -248,7 +285,7 @@ public class ReviewForm32Activity extends AppCompatActivity {
                 System.out.println("dir =" + dir); // str=/storage/emulated/0
 
                 progressBar.setVisibility(View.VISIBLE);
-                createPdf(nameTextView.getText().toString());
+                createPdf();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -342,10 +379,12 @@ public class ReviewForm32Activity extends AppCompatActivity {
     }
 
     @Background
-    void createPdf(String name) {
+    void createPdf() {
         try {
             getReviewNotes();
-            new AddingTable32(this, checkList, rejectedFlag, reviewNoteStr, imgList, name).manipulatePdf(dir + filePath);
+            new AddingTable32(this, checkList, rejectedFlag, reviewNoteStr, imgList,
+                    nameTextView.getText().toString(), samplingUnitName.getText().toString(),
+                     surveyStep).manipulatePdf(dir + filePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -431,6 +470,25 @@ public class ReviewForm32Activity extends AppCompatActivity {
                 (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         bt_dimensions = new LinearLayout.LayoutParams
                 (ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        // spinner
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.survey_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
+                surveyStep = pos;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         // 否决项 TODO
         for (int i = 0; i < 18; i++) {
@@ -759,7 +817,7 @@ public class ReviewForm32Activity extends AppCompatActivity {
             ll.addView(rg);
             mcv.addView(ll);
             allMaterialCardView[i] = mcv;
-            linearLayout.addView(mcv, i + 2);
+            linearLayout.addView(mcv, i + 4);
         }
 
     }

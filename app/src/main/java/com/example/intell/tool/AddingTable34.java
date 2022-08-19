@@ -72,16 +72,30 @@ public class AddingTable34 {
     private int otherIssueCount = 0;
     ArrayList<List<String>> imgList = new ArrayList<>(20);
     private String name;
+    private String provinceCityName;
+    private String samplingUnitName;
+    private String testingUnitName;
+    private String ownerUnitName;
+    private String reportUnitName;
+    private int surveyStep;
     private boolean hasAttachment = false;
 
 
-    public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, String[] reviewNoteStr, ArrayList<List<String>> imgList, String name) {
+    public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag,
+                         String[] reviewNoteStr, ArrayList<List<String>> imgList, String name,
+                         String provinceCityName, String samplingUnitName, String testingUnitName,
+                         String ownerUnitName, String reportUnitName, int surveyStep) {
         this.context = context;
         this.checkList = checkList;
         this.rejectedFlag = rejectedFlag;
         this.reviewNoteStr = reviewNoteStr;
         this.imgList = imgList;
         this.name = name;
+        this.provinceCityName = provinceCityName;
+        this.samplingUnitName = samplingUnitName;
+        this.testingUnitName = testingUnitName;
+        this.ownerUnitName = ownerUnitName;
+        this.reportUnitName = reportUnitName;
     }
 
     public AddingTable34(Activity context, Integer[] checkList, boolean rejectedFlag, EditText[] reviewNotes, ArrayList<List<String>> imgList) {
@@ -127,7 +141,7 @@ public class AddingTable34 {
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("地块名称", 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold(name, 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("所在省市", 10.5f, TextAlignment.CENTER, 2f)));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
+        table.addCell(new Cell().add(generateParagraphWithBold(provinceCityName, 10.5f, TextAlignment.CENTER, 2f)));
         table.addCell(new Cell().add(generateParagraphWithBold("调查时间", 10.5f, TextAlignment.CENTER, 2f)));
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
@@ -137,16 +151,30 @@ public class AddingTable34 {
 //        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER, 2f)));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("调查环节", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        table.addCell(new Cell(1, 2).add(generateParagraph("□第一阶段土壤污染状况调查 \n□初步采样分析   □详细采样分析 \n□第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER)));
+        switch (surveyStep) {
+            case 0:
+                table.addCell(new Cell(1, 2).add(generateParagraph("√第一阶段土壤污染状况调查 \n□初步采样分析   □详细采样分析 \n□第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+            case 1:
+                table.addCell(new Cell(1, 2).add(generateParagraph("□第一阶段土壤污染状况调查 \n√初步采样分析   □详细采样分析 \n□第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+            case 2:
+                table.addCell(new Cell(1, 2).add(generateParagraph("□第一阶段土壤污染状况调查 \n□初步采样分析   √详细采样分析 \n□第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+            case 3:
+                table.addCell(new Cell(1, 2).add(generateParagraph("□第一阶段土壤污染状况调查 \n□初步采样分析   □详细采样分析 \n√第三阶段土壤污染状况调查", 10.5f, TextAlignment.CENTER, 2f)));
+                break;
+        }
+
         table.addCell(new Cell().add(generateParagraphWithBold("业主单位名称", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+        table.addCell(new Cell().add(generateParagraphWithBold(ownerUnitName, 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraphWithBold("报告编制\n单位名称", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+        table.addCell(new Cell().add(generateParagraphWithBold(reportUnitName, 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
 
         table.addCell(new Cell(1, 2).add(generateParagraphWithBold("采样单位名称", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        table.addCell(new Cell(1, 2).add(generateParagraph("", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+        table.addCell(new Cell(1, 2).add(generateParagraph(samplingUnitName, 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraphWithBold("检验检测\n机构名称", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
-        table.addCell(new Cell().add(generateParagraphWithBold("", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
+        table.addCell(new Cell().add(generateParagraphWithBold(testingUnitName, 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraphWithBold("检查日期", 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
         table.addCell(new Cell().add(generateParagraphWithBold(sdf.format(date), 10.5f, TextAlignment.CENTER)).setVerticalAlignment(VerticalAlignment.MIDDLE));
 

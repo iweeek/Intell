@@ -42,4 +42,16 @@
     <string name="asset_on_sd">Asset on SD card example</string>
     <string name="toast_pick_file_error">Unable to pick file. Check status of file manager.</string>
 
+    <string-array name="survey_array">
+        <item>初步采样分析</item>
+        <item>详细采样分析</item>
+        <item>第三阶段土壤污染状况调查</item>
+    </string-array>
+
+    <string-array name="survey2_array">
+        <item>第一阶段土壤污染状况调查</item>
+        <item>初步采样分析</item>
+        <item>详细采样分析</item>
+        <item>第三阶段土壤污染状况调查</item>
+    </string-array>
 </resources>

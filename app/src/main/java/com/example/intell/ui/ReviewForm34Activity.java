@@ -26,6 +26,8 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -33,6 +35,7 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -130,6 +133,28 @@ public class ReviewForm34Activity extends AppCompatActivity {
     EditText nameTextView;
     @ViewById(R.id.ll_name)
     LinearLayout ll_name;
+    @ViewById(R.id.spinner)
+    Spinner spinner;
+    @ViewById(R.id.name_province_city_unit)
+    EditText provinceCityName;
+    @ViewById(R.id.ll_province_city_unit)
+    LinearLayout ll_province_city_unit;
+    @ViewById(R.id.name_sampling_unit)
+    EditText samplingUnitName;
+    @ViewById(R.id.ll_sampling_unit)
+    LinearLayout ll_sampling_unit;
+    @ViewById(R.id.name_testing_unit)
+    EditText testingUnitName;
+    @ViewById(R.id.ll_testing_unit)
+    LinearLayout ll_testing_unit;
+    @ViewById(R.id.name_owner_unit)
+    EditText ownerUnitName;
+    @ViewById(R.id.ll_owner_unit)
+    LinearLayout ll_owner_unit;
+    @ViewById(R.id.name_report_unit)
+    EditText reportUnitName;
+    @ViewById(R.id.ll_report_unit)
+    LinearLayout ll_report_unit;
     RichEditorNew currentRichEditor;
 
     @NonConfigurationInstance
@@ -148,6 +173,7 @@ public class ReviewForm34Activity extends AppCompatActivity {
     RichEditorNew[] richEditors = new RichEditorNew[20];
     ArrayList<List<String>> imgList = new ArrayList<>(20);
     private int baseNo = -1;
+    private int surveyStep;
 
     private Vibrator mVibrator;
 
@@ -235,6 +261,90 @@ public class ReviewForm34Activity extends AppCompatActivity {
             }
         });
 
+        provinceCityName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                ll_province_city_unit.setBackground(null);
+            }
+        });
+
+        samplingUnitName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                ll_sampling_unit.setBackground(null);
+            }
+        });
+
+        testingUnitName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                ll_testing_unit.setBackground(null);
+            }
+        });
+
+        ownerUnitName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                ll_owner_unit.setBackground(null);
+            }
+        });
+
+        reportUnitName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                ll_report_unit.setBackground(null);
+            }
+        });
         //////////////////////////////////////////////////////////////////////////////////////
 //        outputImage = new File(getExternalCacheDir(), "output_image.jpg");
 //        File externalStorageDirectory = Environment.getExternalStorageDirectory();
@@ -317,6 +427,26 @@ public class ReviewForm34Activity extends AppCompatActivity {
             scrollView.smoothScrollTo(0,  0);
             Toast.makeText(this, "请输入项目名称 :)", Toast.LENGTH_SHORT).show();
             ll_name.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (provinceCityName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入所在省市 :)", Toast.LENGTH_SHORT).show();
+            ll_province_city_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (samplingUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入采样单位名称 :)", Toast.LENGTH_SHORT).show();
+            ll_sampling_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (testingUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入检验检测机构名称 :)", Toast.LENGTH_SHORT).show();
+            ll_testing_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (ownerUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入业主单位名称 :)", Toast.LENGTH_SHORT).show();
+            ll_owner_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (reportUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入报告编制单位名称 :)", Toast.LENGTH_SHORT).show();
+            ll_report_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
         } else {
             for (int i = 0; i < 20; i++) {
                 if (choose[i] == false) {
@@ -338,6 +468,26 @@ public class ReviewForm34Activity extends AppCompatActivity {
             scrollView.smoothScrollTo(0,  0);
             Toast.makeText(this, "请输入项目名称 :)", Toast.LENGTH_SHORT).show();
             ll_name.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (provinceCityName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入所在省市 :)", Toast.LENGTH_SHORT).show();
+            ll_province_city_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (samplingUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入采样单位名称 :)", Toast.LENGTH_SHORT).show();
+            ll_sampling_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (testingUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入检验检测机构名称 :)", Toast.LENGTH_SHORT).show();
+            ll_testing_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (ownerUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入业主单位名称 :)", Toast.LENGTH_SHORT).show();
+            ll_owner_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
+        } else if (reportUnitName.getText().toString().trim().isEmpty()) {
+            scrollView.smoothScrollTo(0, 0);
+            Toast.makeText(this, "请输入报告编制单位名称 :)", Toast.LENGTH_SHORT).show();
+            ll_report_unit.setBackground(getResources().getDrawable(R.drawable.focus_error));
         } else {
             try {
                 dir = Environment.getExternalStorageDirectory().getCanonicalPath();
@@ -348,7 +498,7 @@ public class ReviewForm34Activity extends AppCompatActivity {
                 System.out.println("dir =" + dir); // str=/storage/emulated/0
 
                 progressBar.setVisibility(View.VISIBLE);
-                createPdf(nameTextView.getText().toString());
+                createPdf();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -541,10 +691,14 @@ public class ReviewForm34Activity extends AppCompatActivity {
     }
 
     @Background
-    void createPdf(String name) {
+    void createPdf() {
         try {
             getReviewNotes();
-            new AddingTable34(this, checkList, rejectedFlag, reviewNoteStr, imgList, name).manipulatePdf(dir + filePath);
+            new AddingTable34(this, checkList, rejectedFlag, reviewNoteStr, imgList,
+                    nameTextView.getText().toString(), provinceCityName.getText().toString(),
+                    samplingUnitName.getText().toString(), testingUnitName.getText().toString(),
+                    ownerUnitName.getText().toString(), reportUnitName.getText().toString(),
+                    surveyStep).manipulatePdf(dir + filePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -632,6 +786,26 @@ public class ReviewForm34Activity extends AppCompatActivity {
                 (ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         bt_dimensions = new LinearLayout.LayoutParams
                 (ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        // spinner
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.survey2_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
+                surveyStep = pos;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
 
         // 否决项 TODO
         for (int i = 0; i < 20; i++) {
@@ -1048,7 +1222,7 @@ public class ReviewForm34Activity extends AppCompatActivity {
             ll.addView(rg);
             mcv.addView(ll);
             allMaterialCardView[i] = mcv;
-            linearLayout.addView(mcv, i + 3);
+            linearLayout.addView(mcv, i + 9);
         }
     }
 

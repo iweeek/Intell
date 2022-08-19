@@ -26,9 +26,9 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/tv_top_view31"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/tv_top_view31"
                     android:layout_margin="16dp"
                     android:text="@string/check_form_31_title"
                     android:textAlignment="center"
@@ -39,68 +39,111 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    >
+                    android:layout_marginEnd="16dp">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="项目名称"/>
+                        android:text="项目名称" />
 
                     <EditText
+                        android:id="@+id/name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:id="@+id/name"
                         android:layout_marginStart="16dp"
                         android:hint="请输入项目名称" />
                 </LinearLayout>
 
-<!--                <TextView-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginStart="16dp"-->
-<!--                    android:layout_marginEnd="16dp"-->
-<!--                    android:text="@string/reject_items"-->
-<!--                    android:textColor="@color/red"-->
-<!--                    android:textSize="16sp" />-->
+                <LinearLayout
+                    android:id="@+id/ll_sampling_unit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp">
 
-<!--                <TextView-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginStart="16dp"-->
-<!--                    android:layout_marginEnd="16dp"-->
-<!--                    android:text="@string/score_items"-->
-<!--                    android:textColor="@color/red"-->
-<!--                    android:textSize="16sp" />-->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="采样单位" />
+
+                    <EditText
+                        android:id="@+id/name_sampling_unit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:hint="请输入采样单位名称" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="调查环节" />
+
+                    <Spinner
+                        android:id="@+id/spinner"
+                        android:layout_marginStart="16dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp" />
+
+                </LinearLayout>
+
+                <!--                <TextView-->
+                <!--                    android:layout_width="match_parent"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:layout_marginStart="16dp"-->
+                <!--                    android:layout_marginEnd="16dp"-->
+                <!--                    android:text="@string/reject_items"-->
+                <!--                    android:textColor="@color/red"-->
+                <!--                    android:textSize="16sp" />-->
+
+                <!--                <TextView-->
+                <!--                    android:layout_width="match_parent"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:layout_marginStart="16dp"-->
+                <!--                    android:layout_marginEnd="16dp"-->
+                <!--                    android:text="@string/score_items"-->
+                <!--                    android:textColor="@color/red"-->
+                <!--                    android:textSize="16sp" />-->
+
+                <LinearLayout
                     android:id="@+id/ll_bottom_view31"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginBottom="200dp"
                     android:orientation="horizontal">
 
                     <Button
+                        android:id="@+id/bt_preview31"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/bt_preview31"
                         android:layout_marginStart="20dp"
                         android:layout_marginEnd="10dp"
                         android:layout_weight="1"
                         android:text="@string/string_check" />
 
                     <Button
+                        android:id="@+id/bt_pdf31"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/bt_pdf31"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
                         android:layout_weight="1"
                         android:text="@string/string_generate" />
 
                     <Button
+                        android:id="@+id/bt_view_pdf31"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/bt_view_pdf31"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="20dp"
                         android:layout_weight="1"
@@ -113,53 +156,53 @@
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <ProgressBar
+        android:id="@+id/scroll_progress31"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="5dp"
         android:background="@color/blue"
-        android:id="@+id/scroll_progress31"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:max="10000"
         android:progress="0"
         android:visibility="visible" />
 
     <ProgressBar
+        android:id="@+id/pdf_progress31"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/pdf_progress31"
         android:layout_centerInParent="true"
         android:visibility="invisible" />
 
     <LinearLayout
+        android:id="@+id/ll_stick_view31"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
-        android:id="@+id/ll_stick_view31"
-        android:orientation="horizontal"
         android:background="@color/white"
+        android:orientation="horizontal"
         android:visibility="gone">
 
         <Button
+            android:id="@+id/bt_preview31_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_preview31_1"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
             android:text="@string/string_check" />
 
         <Button
+            android:id="@+id/bt_pdf31_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_pdf31_1"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:layout_weight="1"
             android:text="@string/string_generate" />
 
         <Button
+            android:id="@+id/bt_view_pdf31_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bt_view_pdf31_1"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="20dp"
             android:layout_weight="1"
